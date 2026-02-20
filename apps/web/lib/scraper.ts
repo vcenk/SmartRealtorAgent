@@ -167,7 +167,67 @@ function extractInternalLinks(root: HTMLElement, pageUrl: string): string[] {
   return links;
 }
 
+/* ── __NEXT_DATA__ extraction (JS-rendered Next.js sites) ─── */
+/**
+ * Many real estate sites are built with Next.js and render content via
+ * client-side hydration. The raw HTML from fetch() has almost no body text,
+ * but Next.js always embeds the SSR data as JSON inside:
+ *   <script id="__NEXT_DATA__" type="application/json">...</script>
+ *
+ * We recursively walk that JSON and collect every string value > 30 chars
+ * that looks like prose (not a URL, path, or class name), then append it
+ * to the extracted text as a "JS-rendered content" section.
+ *
+ * For sites that are NOT Next.js but still JS-rendered, a real headless
+ * browser (Playwright/Puppeteer) would be required. To enable:
+ *   pnpm add playwright && npx playwright install chromium
+ * then swap in a `launchPage()` call below.
+ */
+function extractNextData(html: string): string {
+  const match = /<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/i.exec(html);
+  if (!match) return '';
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(match[1]);
+  } catch {
+    return '';
+  }
+
+  const lines: string[] = [];
+  const seen = new Set<string>();
+
+  function walk(val: unknown): void {
+    if (typeof val === 'string') {
+      const s = val.trim();
+      // Keep prose: long enough, not a URL/path/class/token
+      if (
+        s.length >= 30 &&
+        !s.startsWith('/') &&
+        !s.startsWith('http') &&
+        !s.startsWith('{') &&
+        !/^[a-z0-9-_]+$/i.test(s) &&
+        !seen.has(s)
+      ) {
+        seen.add(s);
+        lines.push(s);
+      }
+    } else if (Array.isArray(val)) {
+      val.forEach(walk);
+    } else if (val && typeof val === 'object') {
+      Object.values(val as Record<string, unknown>).forEach(walk);
+    }
+  }
+
+  walk(parsed);
+  return lines.join('\n');
+}
+
 /* ── Core scrape function ─────────────────────────────────── */
+
+/** Minimum text length considered "successfully scraped". */
+const MIN_TEXT_LENGTH = 150;
+
 export async function scrapePage(url: string): Promise<ScrapedPage> {
   const res = await fetchWithTimeout(url);
   if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
@@ -187,7 +247,15 @@ export async function scrapePage(url: string): Promise<ScrapedPage> {
   stripNoise(root);
 
   const mainEl = root.querySelector('main, article, [role="main"]') ?? root;
-  const text = toReadableText(mainEl).slice(0, MAX_CONTENT_CHARS);
+  let text = toReadableText(mainEl).slice(0, MAX_CONTENT_CHARS);
+
+  // Fallback for JS-rendered pages: try __NEXT_DATA__ extraction
+  if (text.length < MIN_TEXT_LENGTH) {
+    const nextData = extractNextData(html);
+    if (nextData.length > MIN_TEXT_LENGTH) {
+      text = `${text}\n\n--- JS-Rendered Content (Next.js) ---\n${nextData}`.slice(0, MAX_CONTENT_CHARS);
+    }
+  }
 
   const ldText = jsonLdToText(jsonLd);
   const structuredText = ldText
