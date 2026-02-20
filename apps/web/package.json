@@ -16,9 +16,11 @@
     "@smartrealtor/rag": "workspace:*",
     "@smartrealtor/skills": "workspace:*",
     "@supabase/supabase-js": "^2.49.1",
+    "@types/pdf-parse": "^1.1.5",
     "next": "^15.1.7",
     "node-html-parser": "^7.0.2",
     "openai": "^6.22.0",
+    "pdf-parse": "^2.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "zod": "^3.24.2"

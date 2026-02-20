@@ -328,29 +328,36 @@ export default function KnowledgeBasePage() {
     }
   };
 
+  const uploadFile = async (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    if (ext === 'pdf') {
+      // PDF must go via the upload route (binary → server-side pdf-parse)
+      const form = new FormData();
+      form.append('tenantId', tenantId);
+      form.append('file', file);
+      const res = await fetch('/api/knowledge/upload', { method: 'POST', body: form });
+      if (res.ok) fetchSources();
+    } else {
+      // Text files can be read in-browser and sent as JSON content
+      const text = await file.text();
+      const res = await fetch('/api/knowledge/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId, title: file.name, content: text }),
+      });
+      if (res.ok) fetchSources();
+    }
+  };
+
   const handleFileDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (!file) return;
-    const text = await file.text();
-    const res = await fetch('/api/knowledge/ingest', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tenantId, title: file.name, content: text }),
-    });
-    if (res.ok) fetchSources();
+    if (file) await uploadFile(file);
   };
 
   const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    const res = await fetch('/api/knowledge/ingest', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tenantId, title: file.name, content: text }),
-    });
-    if (res.ok) fetchSources();
+    if (file) await uploadFile(file);
     e.target.value = '';
   };
 
@@ -394,10 +401,10 @@ export default function KnowledgeBasePage() {
         onClick={() => fileRef.current?.click()}
         style={{ cursor: 'pointer' }}
       >
-        <input ref={fileRef} type="file" accept=".txt,.md,.csv" style={{ display: 'none' }} onChange={handleFileInput} />
+        <input ref={fileRef} type="file" accept=".txt,.md,.csv,.pdf" style={{ display: 'none' }} onChange={handleFileInput} />
         <div className="dash-dropzone-icon">📄</div>
         <p className="dash-dropzone-title">Drop a file or click to browse</p>
-        <p className="dash-dropzone-sub">.txt, .md, or .csv — max 10 MB. Use "Add Source" for URLs.</p>
+        <p className="dash-dropzone-sub">.txt, .md, .csv, or .pdf — max 10 MB. Use "Add Source" for URLs.</p>
         <button className="btn btn-outline" style={{ fontSize: '0.85rem', padding: '0.5rem 1.2rem' }} onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}>
           Browse Files
         </button>
