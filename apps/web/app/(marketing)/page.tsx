@@ -17,7 +17,7 @@ const features = [
   {
     icon: '🏢',
     title: 'Multi-Tenant Dashboard',
-    desc: 'Supabase row-level security keeps every agency's data fully isolated.',
+    desc: "Supabase row-level security keeps every agency's data fully isolated.",
   },
   {
     icon: '🔌',
@@ -144,7 +144,7 @@ const faqs = [
   },
   {
     q: 'Does the chatbot cite its sources?',
-    a: 'Yes. The policy engine enforces citations on every factual response. If the answer isn't in your KB, the bot says so rather than making something up.',
+    a: "Yes. The policy engine enforces citations on every factual response. If the answer isn't in your KB, the bot says so rather than making something up.",
   },
   {
     q: 'How long does setup take?',
@@ -155,7 +155,7 @@ const faqs = [
     a: 'Not in v1. We ship with integration stubs for MLS, CRM, and SMS — full connections are on the roadmap.',
   },
   {
-    q: 'What happens when the bot doesn't know the answer?',
+    q: "What happens when the bot doesn't know the answer?",
     a: 'The policy engine detects low-confidence retrieval and redirects the visitor to contact you directly — it never fabricates a response.',
   },
 ];

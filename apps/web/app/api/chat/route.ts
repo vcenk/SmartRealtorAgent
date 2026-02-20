@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
-import { Orchestrator, ToolRegistry } from '@smartrealtor/agent-core';
+import { Orchestrator, ToolRegistry, type ToolExecutionContext } from '@smartrealtor/agent-core';
 import {
   appendConversationMessageSkill,
   executeSkill,
@@ -109,15 +109,17 @@ const createRegistry = (tenantId: string, conversationId: string): ToolRegistry 
   const perms = ['kb:read', 'lead:write', 'conversation:write'];
 
   for (const skill of [kbSearchSkill, leadsUpsertSkill, appendConversationMessageSkill]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const s = skill as any;
     registry.register({
-      name: skill.name,
-      description: skill.description,
-      inputSchema: skill.inputSchema,
-      outputSchema: skill.outputSchema,
-      permissionGate: (context) =>
-        skill.permissionGate({ ...context, db, tenantId, conversationId, permissions: perms }),
-      execute: async (input, context) =>
-        executeSkill(skill, input, { ...context, db, tenantId, conversationId, permissions: perms }),
+      name: s.name,
+      description: s.description,
+      inputSchema: s.inputSchema,
+      outputSchema: s.outputSchema,
+      permissionGate: (context: ToolExecutionContext) =>
+        s.permissionGate({ ...context, db, tenantId, conversationId, permissions: perms }),
+      execute: async (input: unknown, context: ToolExecutionContext) =>
+        executeSkill(s, input, { ...context, db, tenantId, conversationId, permissions: perms }),
     });
   }
 
