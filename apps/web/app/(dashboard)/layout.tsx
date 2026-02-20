@@ -8,6 +8,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase-client';
 
 const navItems = [
   { href: '/leads', label: 'Leads', icon: '🎯' },
+  { href: '/conversations', label: 'Conversations', icon: '💬' },
   { href: '/knowledge-base', label: 'Knowledge Base', icon: '📚' },
   { href: '/widget-install', label: 'Widget Install', icon: '🔌' },
   { href: '/settings', label: 'Settings', icon: '⚙️' },
