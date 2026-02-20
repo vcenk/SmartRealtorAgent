@@ -17,6 +17,7 @@
     "@smartrealtor/skills": "workspace:*",
     "@supabase/supabase-js": "^2.49.1",
     "next": "^15.1.7",
+    "node-html-parser": "^7.0.2",
     "openai": "^6.22.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -1,32 +1,18 @@
 /**
  * POST /api/knowledge/reindex
- * Re-embeds all chunks for a given knowledge_source.
+ * Re-fetches (for URL sources) or re-chunks the stored content,
+ * re-embeds, and replaces all chunks for a given knowledge_source.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import OpenAI from 'openai';
-import { chunkText } from '@smartrealtor/rag';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { scrapePage } from '@/lib/scraper';
+import { embedText, storeChunks } from '../ingest/route';
 
 const bodySchema = z.object({
   tenantId: z.string().uuid(),
   sourceId: z.string().uuid(),
 });
-
-async function embedText(text: string): Promise<number[] | null> {
-  if (!process.env.OPENAI_API_KEY) return null;
-  try {
-    const resp = await openai.embeddings.create({
-      model: 'text-embedding-3-small',
-      input: text.slice(0, 8000),
-    });
-    return resp.data[0]?.embedding ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
@@ -37,7 +23,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const { tenantId, sourceId } = parsed.data;
   const supabase = createServiceSupabaseClient();
 
-  // Fetch the source
   const { data: src, error: srcErr } = await supabase
     .from('knowledge_sources')
     .select('id, title, url, content')
@@ -49,34 +34,32 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Source not found' }, { status: 404 });
   }
 
-  // Mark pending
   await supabase
     .from('knowledge_sources')
     .update({ status: 'pending', updated_at: new Date().toISOString() })
     .eq('id', sourceId);
 
-  // Delete old chunks
   await supabase.from('knowledge_chunks').delete().eq('source_id', sourceId);
 
-  // Re-chunk + re-embed
-  const chunks = chunkText(
-    { tenantId, sourceId, title: src.title as string, text: src.content as string, url: src.url ?? undefined },
-    { chunkSize: 500, overlap: 100 },
-  );
-
-  let stored = 0;
-  for (const chunk of chunks) {
-    const embedding = await embedText(chunk.text);
-    const { error } = await supabase.from('knowledge_chunks').insert({
-      tenant_id: tenantId,
-      source_id: sourceId,
-      title: chunk.title,
-      url: chunk.url ?? null,
-      snippet: chunk.text,
-      embedding: embedding ? JSON.stringify(embedding) : null,
-    });
-    if (!error) stored += 1;
+  // If source has a URL, re-fetch for fresh content; otherwise use stored content
+  let text = src.content as string;
+  let title = src.title as string;
+  if (src.url) {
+    try {
+      const page = await scrapePage(src.url as string);
+      text = page.structuredText;
+      title = page.title || title;
+      // Update stored content with fresh scrape
+      await supabase
+        .from('knowledge_sources')
+        .update({ content: text.slice(0, 100_000), title })
+        .eq('id', sourceId);
+    } catch { /* fall back to stored content */ }
   }
+
+  const stored = await storeChunks(supabase, {
+    tenantId, sourceId, title, text, url: src.url as string | undefined,
+  });
 
   await supabase
     .from('knowledge_sources')
@@ -85,3 +68,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   return NextResponse.json({ sourceId, chunksCreated: stored });
 }
+
+// Re-export embedText so crawl route can use it without re-declaring
+export { embedText };
