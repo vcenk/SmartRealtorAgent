@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const DEMO_TENANT = '11111111-1111-1111-1111-111111111111';
 
 type ThemeId = 'dark' | 'minimal' | 'professional' | 'glass';
 
@@ -168,10 +170,55 @@ function ThemePreview({ theme }: { theme: (typeof WIDGET_THEMES)[number] }) {
 export default function SettingsPage() {
   const [selectedTheme, setSelectedTheme] = useState<ThemeId>('dark');
   const [botName, setBotName] = useState('SmartRealtorAI');
+  const [agencyName, setAgencyName] = useState('Demo Realty');
+  const [websiteUrl, setWebsiteUrl] = useState('');
   const [welcomeMsg, setWelcomeMsg] = useState(
     "Hi! I'm your AI real estate assistant. Ask me anything about listings, neighborhoods, or getting started.",
   );
   const [brandColor, setBrandColor] = useState('#7c3aed');
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState('');
+
+  // Load current settings from DB
+  useEffect(() => {
+    fetch(`/api/settings?tenantId=${DEMO_TENANT}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.name) setAgencyName(d.name);
+        if (d.website_url) setWebsiteUrl(d.website_url);
+        if (d.bot_name) setBotName(d.bot_name);
+        if (d.welcome_message) setWelcomeMsg(d.welcome_message);
+        if (d.widget_theme) setSelectedTheme(d.widget_theme as ThemeId);
+        if (d.brand_color) setBrandColor(d.brand_color);
+      })
+      .catch(() => {/* silently ignore if DB not yet connected */});
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveMsg('');
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId: DEMO_TENANT,
+          name: agencyName,
+          websiteUrl,
+          botName,
+          welcomeMessage: welcomeMsg,
+          widgetTheme: selectedTheme,
+          brandColor,
+        }),
+      });
+      setSaveMsg(res.ok ? '✓ Saved' : '✗ Save failed');
+    } catch {
+      setSaveMsg('✗ Network error');
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveMsg(''), 3000);
+    }
+  };
 
   return (
     <div>
@@ -181,9 +228,21 @@ export default function SettingsPage() {
           <h1 className="dash-page-title">Settings</h1>
           <p className="dash-page-sub">Manage your tenant profile, widget theme, and policy configuration.</p>
         </div>
-        <button className="btn btn-primary" style={{ fontSize: '0.88rem', padding: '0.6rem 1.3rem' }}>
-          Save Changes
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {saveMsg && (
+            <span style={{ fontSize: '0.85rem', color: saveMsg.startsWith('✓') ? '#4ade80' : '#f87171' }}>
+              {saveMsg}
+            </span>
+          )}
+          <button
+            className="btn btn-primary"
+            style={{ fontSize: '0.88rem', padding: '0.6rem 1.3rem' }}
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
       </div>
 
       {/* ── Widget Theme Selector ────────────────────────── */}
@@ -238,11 +297,11 @@ export default function SettingsPage() {
           <div className="dash-settings-card-title">Tenant Profile</div>
           <div className="form-field">
             <label className="form-label">Agency name</label>
-            <input className="form-input" defaultValue="Demo Realty" />
+            <input className="form-input" value={agencyName} onChange={(e) => setAgencyName(e.target.value)} />
           </div>
           <div className="form-field">
             <label className="form-label">Website URL</label>
-            <input className="form-input" type="url" placeholder="https://yoursite.com" />
+            <input className="form-input" type="url" placeholder="https://yoursite.com" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} />
           </div>
           <div className="form-field">
             <label className="form-label">Bot ID</label>

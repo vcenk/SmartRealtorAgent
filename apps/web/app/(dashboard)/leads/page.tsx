@@ -1,56 +1,66 @@
-const mockLeads = [
-  {
-    id: 'lead-001',
-    name: 'Alex Johnson',
-    contact: 'alex@email.com',
-    intent: 'Buyer',
-    area: 'Downtown, SF',
-    budget: '$850k–$1.1M',
-    timeline: '3 months',
-    status: 'QUALIFYING',
-    captured: '2026-02-18',
-  },
-  {
-    id: 'lead-002',
-    name: 'Maria Chen',
-    contact: 'mchen@gmail.com',
-    intent: 'Seller',
-    area: 'Palo Alto',
-    budget: 'Est. $2.4M',
-    timeline: '6 months',
-    status: 'CAPTURED',
-    captured: '2026-02-19',
-  },
-  {
-    id: 'lead-003',
-    name: 'Derek Williams',
-    contact: 'dwilliams@work.co',
-    intent: 'Buyer',
-    area: 'Oakland Hills',
-    budget: '$600k–$750k',
-    timeline: '1 month',
-    status: 'ENGAGED',
-    captured: '2026-02-20',
-  },
-];
+import { createServiceSupabaseClient } from '@/lib/supabase-server';
+
+/* ── Types ────────────────────────────────────────────────── */
+type Lead = {
+  id: string;
+  payload: {
+    name?: string;
+    contact?: string;
+    intent?: string;
+    area?: string;
+    budget?: string;
+    timeline?: string;
+    stage?: string;
+  };
+  created_at: string;
+};
 
 const statusColors: Record<string, string> = {
-  NEW: 'rgba(100,116,139,0.25)',
-  ENGAGED: 'rgba(59,130,246,0.2)',
-  QUALIFYING: 'rgba(245,158,11,0.2)',
-  CAPTURED: 'rgba(34,197,94,0.2)',
+  new: 'rgba(100,116,139,0.25)',
+  engaged: 'rgba(59,130,246,0.2)',
+  qualifying: 'rgba(245,158,11,0.2)',
+  captured: 'rgba(34,197,94,0.2)',
 };
 const statusText: Record<string, string> = {
-  NEW: '#94a3b8',
-  ENGAGED: '#60a5fa',
-  QUALIFYING: '#fbbf24',
-  CAPTURED: '#4ade80',
+  new: '#94a3b8',
+  engaged: '#60a5fa',
+  qualifying: '#fbbf24',
+  captured: '#4ade80',
 };
 
-export default function LeadsPage() {
+function stageLabel(lead: Lead): string {
+  return (lead.payload.stage ?? 'new').toLowerCase();
+}
+
+/* ── Server data fetch ────────────────────────────────────── */
+async function getLeads(tenantId: string): Promise<Lead[]> {
+  try {
+    const supabase = createServiceSupabaseClient();
+    const { data, error } = await supabase
+      .from('leads')
+      .select('id, payload, created_at')
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Lead[];
+  } catch {
+    return [];
+  }
+}
+
+/* ── Page ─────────────────────────────────────────────────── */
+export default async function LeadsPage() {
+  // TODO: derive tenantId from session once auth middleware is complete.
+  const DEMO_TENANT = '11111111-1111-1111-1111-111111111111';
+  const leads = await getLeads(DEMO_TENANT);
+
+  const total = leads.length;
+  const captured = leads.filter((l) => stageLabel(l) === 'captured').length;
+  const qualifying = leads.filter((l) => stageLabel(l) === 'qualifying').length;
+
   return (
     <div>
-      {/* Page header */}
       <div className="dash-page-header">
         <div>
           <h1 className="dash-page-title">Leads</h1>
@@ -58,69 +68,80 @@ export default function LeadsPage() {
         </div>
         <div className="dash-stats-row">
           <div className="dash-stat-pill">
-            <span className="dash-stat-pill-num">3</span>
+            <span className="dash-stat-pill-num">{total}</span>
             <span className="dash-stat-pill-label">Total</span>
           </div>
           <div className="dash-stat-pill">
-            <span className="dash-stat-pill-num" style={{ color: '#4ade80' }}>1</span>
+            <span className="dash-stat-pill-num" style={{ color: '#4ade80' }}>{captured}</span>
             <span className="dash-stat-pill-label">Captured</span>
           </div>
           <div className="dash-stat-pill">
-            <span className="dash-stat-pill-num" style={{ color: '#fbbf24' }}>1</span>
+            <span className="dash-stat-pill-num" style={{ color: '#fbbf24' }}>{qualifying}</span>
             <span className="dash-stat-pill-label">Qualifying</span>
           </div>
         </div>
       </div>
 
-      {/* Leads table */}
-      <div className="dash-table-wrap">
-        <table className="dash-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Contact</th>
-              <th>Intent</th>
-              <th>Area</th>
-              <th>Budget</th>
-              <th>Timeline</th>
-              <th>Status</th>
-              <th>Captured</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mockLeads.map((lead) => (
-              <tr key={lead.id}>
-                <td className="dash-table-name">{lead.name}</td>
-                <td style={{ color: 'var(--muted)' }}>{lead.contact}</td>
-                <td>
-                  <span className="dash-intent-badge" data-intent={lead.intent}>
-                    {lead.intent}
-                  </span>
-                </td>
-                <td style={{ color: 'var(--muted)' }}>{lead.area}</td>
-                <td style={{ color: 'var(--ink)' }}>{lead.budget}</td>
-                <td style={{ color: 'var(--muted)' }}>{lead.timeline}</td>
-                <td>
-                  <span
-                    className="dash-status-badge"
-                    style={{
-                      background: statusColors[lead.status] ?? 'rgba(100,116,139,0.2)',
-                      color: statusText[lead.status] ?? '#94a3b8',
-                    }}
-                  >
-                    {lead.status}
-                  </span>
-                </td>
-                <td style={{ color: 'var(--muted2)', fontSize: '0.82rem' }}>{lead.captured}</td>
+      {leads.length > 0 ? (
+        <div className="dash-table-wrap">
+          <table className="dash-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Contact</th>
+                <th>Intent</th>
+                <th>Area</th>
+                <th>Budget</th>
+                <th>Timeline</th>
+                <th>Status</th>
+                <th>Captured</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <p className="dash-empty-note">
-        Live leads arrive here automatically when your widget captures buyer or seller intent.
-      </p>
+            </thead>
+            <tbody>
+              {leads.map((lead) => {
+                const p = lead.payload;
+                const stage = stageLabel(lead);
+                return (
+                  <tr key={lead.id}>
+                    <td className="dash-table-name">{p.name ?? '—'}</td>
+                    <td style={{ color: 'var(--muted)' }}>{p.contact ?? '—'}</td>
+                    <td>
+                      {p.intent ? (
+                        <span className="dash-intent-badge" data-intent={p.intent}>{p.intent}</span>
+                      ) : '—'}
+                    </td>
+                    <td style={{ color: 'var(--muted)' }}>{p.area ?? '—'}</td>
+                    <td style={{ color: 'var(--ink)' }}>{p.budget ?? '—'}</td>
+                    <td style={{ color: 'var(--muted)' }}>{p.timeline ?? '—'}</td>
+                    <td>
+                      <span
+                        className="dash-status-badge"
+                        style={{
+                          background: statusColors[stage] ?? 'rgba(100,116,139,0.2)',
+                          color: statusText[stage] ?? '#94a3b8',
+                        }}
+                      >
+                        {stage.toUpperCase()}
+                      </span>
+                    </td>
+                    <td style={{ color: 'var(--muted2)', fontSize: '0.82rem' }}>
+                      {new Date(lead.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="dash-empty-state">
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎯</div>
+          <p style={{ fontWeight: 600, marginBottom: '0.4rem' }}>No leads yet</p>
+          <p className="dash-empty-note">
+            Live leads appear here automatically when your widget captures buyer or seller intent.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

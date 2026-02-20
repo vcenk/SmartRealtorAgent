@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createBrowserSupabaseClient } from '@/lib/supabase-client';
@@ -15,14 +15,23 @@ const navItems = [
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
     supabase.auth.getSession().then(({ data }) => {
       setAuthenticated(Boolean(data.session));
+      setUserEmail(data.session?.user.email ?? null);
     });
   }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createBrowserSupabaseClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
 
   return (
     <div className="dash-root">
@@ -66,10 +75,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
           {/* Bottom */}
           <div className="dash-sidebar-bottom">
+            {userEmail && (
+              <div style={{ fontSize: '0.75rem', color: 'var(--muted2)', padding: '0 0.5rem 0.5rem', wordBreak: 'break-all' }}>
+                {userEmail}
+              </div>
+            )}
             <Link href="/" className="dash-nav-item" style={{ color: 'var(--muted2)' }}>
               <span className="dash-nav-icon">↩</span>
               Back to site
             </Link>
+            <button
+              onClick={handleSignOut}
+              className="dash-nav-item"
+              style={{ color: '#f87171', border: 0, background: 'transparent', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+            >
+              <span className="dash-nav-icon">⎋</span>
+              Sign out
+            </button>
           </div>
         </div>
       </aside>
