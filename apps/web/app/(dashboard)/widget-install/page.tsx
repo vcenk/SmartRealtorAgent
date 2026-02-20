@@ -1,14 +1,22 @@
-const snippet = `<script
-  src="https://cdn.smartrealtoriai.com/widget.js"
-  data-bot-id="YOUR_BOT_ID"
-  data-api-base-url="https://api.smartrealtoriai.com"
-></script>`;
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+
+type ThemeId = 'dark' | 'minimal' | 'professional' | 'glass';
+
+const THEMES: Array<{ id: ThemeId; label: string; color: string }> = [
+  { id: 'dark', label: 'Modern Dark', color: 'var(--purple-light)' },
+  { id: 'minimal', label: 'Clean Minimal', color: '#a3e635' },
+  { id: 'professional', label: 'Professional', color: '#38bdf8' },
+  { id: 'glass', label: 'Glassmorphism', color: '#c084fc' },
+];
 
 const steps = [
   {
     num: '01',
-    title: 'Copy the snippet',
-    desc: 'Copy the script tag below and replace YOUR_BOT_ID with your tenant bot ID from Settings.',
+    title: 'Choose your theme',
+    desc: 'Pick a widget style in Settings, then copy the snippet with your selected theme applied.',
   },
   {
     num: '02',
@@ -18,11 +26,21 @@ const steps = [
   {
     num: '03',
     title: 'Go live',
-    desc: 'Save and deploy. The widget will appear as a floating button in the bottom-right corner.',
+    desc: 'Save and deploy. The widget appears as a floating button in the bottom-right corner.',
   },
 ];
 
 export default function WidgetInstallPage() {
+  const [theme, setTheme] = useState<ThemeId>('dark');
+
+  const snippet = `<script
+  src="https://cdn.smartrealtoriai.com/widget.js"
+  data-bot-id="YOUR_BOT_ID"
+  data-theme="${theme}"
+  data-bot-name="SmartRealtorAI"
+  data-api-base-url="https://api.smartrealtoriai.com"
+></script>`;
+
   return (
     <div>
       {/* Page header */}
@@ -47,26 +65,91 @@ export default function WidgetInstallPage() {
         ))}
       </div>
 
+      {/* Theme picker */}
+      <div className="dash-section-label" style={{ marginBottom: '0.75rem' }}>
+        Select theme for your snippet
+      </div>
+      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+        {THEMES.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTheme(t.id)}
+            className="btn"
+            style={{
+              fontSize: '0.82rem',
+              padding: '0.45rem 1rem',
+              background: theme === t.id ? 'rgba(124,58,237,0.2)' : 'var(--surface)',
+              border: `1px solid ${theme === t.id ? 'rgba(124,58,237,0.5)' : 'var(--line)'}`,
+              color: theme === t.id ? t.color : 'var(--muted)',
+              borderRadius: '999px',
+            }}
+          >
+            {theme === t.id ? '✓ ' : ''}{t.label}
+          </button>
+        ))}
+      </div>
+
       {/* Code snippet */}
       <div className="dash-code-block-wrap">
         <div className="dash-code-header">
-          <span style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>HTML — paste before &lt;/body&gt;</span>
-          <button className="btn btn-outline" style={{ fontSize: '0.78rem', padding: '0.3rem 0.9rem' }}>
+          <span style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>
+            HTML — paste before &lt;/body&gt; · theme: <strong style={{ color: 'var(--purple-light)' }}>{theme}</strong>
+          </span>
+          <button className="btn btn-outline" style={{ fontSize: '0.78rem', padding: '0.3rem 0.9rem' }}
+            onClick={() => navigator.clipboard?.writeText(snippet)}
+          >
             Copy
           </button>
         </div>
         <pre className="dash-code-block">{snippet}</pre>
       </div>
 
-      {/* Preview card */}
+      {/* Attributes reference */}
+      <div style={{ marginTop: '2rem' }}>
+        <div className="dash-section-label" style={{ marginBottom: '0.75rem' }}>Script attributes reference</div>
+        <div className="dash-table-wrap">
+          <table className="dash-table">
+            <thead>
+              <tr>
+                <th>Attribute</th>
+                <th>Required</th>
+                <th>Values</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { attr: 'data-bot-id', req: 'Yes', vals: 'UUID string', desc: 'Your tenant bot ID from Settings' },
+                { attr: 'data-theme', req: 'No', vals: 'dark · minimal · professional · glass', desc: 'Widget visual theme (default: dark)' },
+                { attr: 'data-bot-name', req: 'No', vals: 'Any string', desc: 'Name shown in chat header (default: SmartRealtorAI)' },
+                { attr: 'data-api-base-url', req: 'No', vals: 'URL', desc: 'API origin (default: auto-detected)' },
+                { attr: 'data-welcome-message', req: 'No', vals: 'Any string', desc: 'First message the bot sends' },
+              ].map((row) => (
+                <tr key={row.attr}>
+                  <td><code style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--purple-light)' }}>{row.attr}</code></td>
+                  <td>
+                    <span className="dash-status-badge" style={{ background: row.req === 'Yes' ? 'rgba(239,68,68,0.12)' : 'rgba(100,116,139,0.15)', color: row.req === 'Yes' ? '#f87171' : 'var(--muted)' }}>
+                      {row.req}
+                    </span>
+                  </td>
+                  <td style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>{row.vals}</td>
+                  <td style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>{row.desc}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Info card */}
       <div className="dash-info-card" style={{ marginTop: '2rem' }}>
         <span style={{ fontSize: '1.5rem' }}>💡</span>
         <div>
-          <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Your bot ID</div>
+          <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Configure themes and branding in Settings</div>
           <p style={{ fontSize: '0.88rem', color: 'var(--muted)' }}>
-            Find your bot ID in the{' '}
-            <a href="/settings" style={{ color: 'var(--purple-light)' }}>Settings page</a>.
-            Each tenant has a unique bot ID that scopes the widget to your knowledge base and lead pipeline.
+            Preview all 4 widget themes with live mini-previews in the{' '}
+            <Link href="/settings" style={{ color: 'var(--purple-light)' }}>Settings page</Link>.
+            Your bot name, welcome message, and brand color are also configured there.
           </p>
         </div>
       </div>
