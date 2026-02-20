@@ -50,10 +50,10 @@ export default function WidgetPage({ params }: { params: Promise<{ botId: string
   const [streaming, setStreaming] = useState(false);
   const [convId] = useState(() => {
     if (typeof window === 'undefined') return generateConversationId();
-    const stored = sessionStorage.getItem(`sra-conv-${botId}`);
+    const stored = localStorage.getItem(`sra-conv-${botId}`);
     if (stored) return stored;
     const id = generateConversationId();
-    sessionStorage.setItem(`sra-conv-${botId}`, id);
+    localStorage.setItem(`sra-conv-${botId}`, id);
     return id;
   });
   const bottomRef = useRef<HTMLDivElement>(null);
