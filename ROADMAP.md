@@ -75,10 +75,11 @@ These are implemented in code but not real — they are placeholder/stub impleme
 
 | Gap | Current State | What's Needed |
 |---|---|---|
-| **No Supabase migrations** | Zero `.sql` migration files | Create schema for: `tenants`, `knowledge_sources`, `knowledge_chunks`, `messages`, `leads`, `conversations` |
+| **Schema exists but not wired to UI** | `infra/supabase/migrations/0001_init.sql` defines all 8 tables with RLS (tenants, profiles, knowledge_sources, knowledge_chunks, conversations, messages, leads, skill_audit_logs) | Apply migrations to a real Supabase project; connect dashboard pages to it |
 | **Leads page uses mock data** | 3 hardcoded leads in `leads/page.tsx` | Add Supabase client read from `leads` table for current tenant |
-| **Knowledge Base uses mock data** | 3 hardcoded sources in `knowledge-base/page.tsx` | Load from `knowledge_sources` table |
-| **Settings "Save" does nothing** | Form values are local React state only | Add `PUT /api/settings` endpoint + DB upsert |
+| **Knowledge Base uses mock data** | 3 hardcoded sources in `knowledge-base/page.tsx` | Load from `knowledge_sources` table; wire the upload + re-index actions |
+| **Settings "Save" does nothing** | Form values are local React state only | Add `PUT /api/settings` endpoint + DB upsert to `tenants` / `profiles` |
+| **`skill_audit_logs` never used in UI** | Populated by API but never displayed | Add an Audit Log page or section in Settings |
 
 ### Important: Document Ingestion Pipeline
 
@@ -173,9 +174,9 @@ These are the blockers before any real customer can use it.
 ```
 Foundation:  ████████████████████░░  ~80% (UI polished, core logic wired)
 AI / RAG:    ████░░░░░░░░░░░░░░░░░░  ~20% (all stubs, no real LLM)
-Data layer:  ██░░░░░░░░░░░░░░░░░░░░  ~10% (no migrations, all mock data)
+Data layer:  ████████░░░░░░░░░░░░░░  ~40% (schema+RLS defined, UI still uses mock data)
 Auth/Tenant: ████░░░░░░░░░░░░░░░░░░  ~20% (login works, no middleware, no onboarding)
-Overall:     █████████░░░░░░░░░░░░░  ~35% toward production-ready
+Overall:     █████████░░░░░░░░░░░░░  ~40% toward production-ready
 ```
 
-The **UI, design system, and architecture are production-quality**. The biggest gaps are the AI pipeline (real LLM + real embeddings + real vector search) and the database layer (migrations + replacing mock data with real queries).
+The **UI, design system, and architecture are production-quality**. The Supabase schema is fully defined with 8 tables and RLS policies. The biggest remaining gaps are: (1) real LLM + embeddings + vector search in the AI pipeline, and (2) wiring the dashboard UI to the real DB instead of mock data.
