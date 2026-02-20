@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.turbo/
+.env
+.env.local
+.pnpm-store/

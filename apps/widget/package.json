@@ -1,0 +1,16 @@
+{
+  "name": "@smartrealtor/widget",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsup src/index.ts --format iife --global-name SmartRealtorWidget --watch --out-dir dist --clean",
+    "build": "tsup src/index.ts --format iife --global-name SmartRealtorWidget --out-dir dist --clean --minify",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0"
+  }
+}
