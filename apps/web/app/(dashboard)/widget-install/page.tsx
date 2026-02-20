@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTenant } from '@/lib/use-tenant';
 
 type ThemeId = 'dark' | 'minimal' | 'professional' | 'glass';
 
@@ -32,13 +33,13 @@ const steps = [
 
 export default function WidgetInstallPage() {
   const [theme, setTheme] = useState<ThemeId>('dark');
+  const { tenantId } = useTenant();
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://yourapp.com';
   const snippet = `<script
-  src="https://cdn.smartrealtoriai.com/widget.js"
-  data-bot-id="YOUR_BOT_ID"
+  src="${origin}/api/widget-script"
+  data-bot-id="${tenantId}"
   data-theme="${theme}"
-  data-bot-name="SmartRealtorAI"
-  data-api-base-url="https://api.smartrealtoriai.com"
 ></script>`;
 
   return (

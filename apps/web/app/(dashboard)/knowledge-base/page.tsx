@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-
-const DEMO_TENANT = '11111111-1111-1111-1111-111111111111';
+import { useTenant } from '@/lib/use-tenant';
 
 type Source = {
   id: string;
@@ -21,9 +20,11 @@ const statusStyle: Record<string, { bg: string; color: string }> = {
 
 /* ── Add Source Modal ─────────────────────────────────────── */
 function AddSourceModal({
+  tenantId,
   onClose,
   onAdded,
 }: {
+  tenantId: string;
   onClose: () => void;
   onAdded: () => void;
 }) {
@@ -46,7 +47,7 @@ function AddSourceModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tenantId: DEMO_TENANT,
+          tenantId,
           title: title.trim(),
           url: mode === 'url' ? url.trim() : undefined,
           content: mode === 'text' ? content.trim() : undefined,
@@ -129,23 +130,28 @@ function AddSourceModal({
 
 /* ── Page ─────────────────────────────────────────────────── */
 export default function KnowledgeBasePage() {
+  const { tenantId, loading: tenantLoading } = useTenant();
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [reindexing, setReindexing] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const fetchSources = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/knowledge/sources?tenantId=${DEMO_TENANT}`);
+      const res = await fetch(`/api/knowledge/sources?tenantId=${tenantId}`);
       if (res.ok) setSources(await res.json());
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchSources(); }, []);
+  useEffect(() => {
+    if (!tenantLoading) fetchSources();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantLoading, tenantId]);
 
   const handleReindex = async (sourceId: string) => {
     setReindexing(sourceId);
@@ -153,11 +159,26 @@ export default function KnowledgeBasePage() {
       await fetch('/api/knowledge/reindex', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenantId: DEMO_TENANT, sourceId }),
+        body: JSON.stringify({ tenantId, sourceId }),
       });
       await fetchSources();
     } finally {
       setReindexing(null);
+    }
+  };
+
+  const handleDelete = async (sourceId: string) => {
+    if (!confirm('Delete this source and all its chunks? This cannot be undone.')) return;
+    setDeleting(sourceId);
+    try {
+      await fetch('/api/knowledge/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId, sourceId }),
+      });
+      await fetchSources();
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -169,7 +190,7 @@ export default function KnowledgeBasePage() {
     const res = await fetch('/api/knowledge/ingest', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tenantId: DEMO_TENANT, title: file.name, content: text }),
+      body: JSON.stringify({ tenantId, title: file.name, content: text }),
     });
     if (res.ok) fetchSources();
   };
@@ -181,7 +202,7 @@ export default function KnowledgeBasePage() {
     const res = await fetch('/api/knowledge/ingest', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tenantId: DEMO_TENANT, title: file.name, content: text }),
+      body: JSON.stringify({ tenantId, title: file.name, content: text }),
     });
     if (res.ok) fetchSources();
     e.target.value = '';
@@ -191,6 +212,7 @@ export default function KnowledgeBasePage() {
     <div>
       {showModal && (
         <AddSourceModal
+          tenantId={tenantId}
           onClose={() => setShowModal(false)}
           onAdded={fetchSources}
         />
@@ -265,14 +287,24 @@ export default function KnowledgeBasePage() {
                     {new Date(src.updated_at).toLocaleDateString()}
                   </td>
                   <td>
-                    <button
-                      className="btn btn-outline"
-                      style={{ fontSize: '0.78rem', padding: '0.3rem 0.75rem' }}
-                      disabled={reindexing === src.id}
-                      onClick={() => handleReindex(src.id)}
-                    >
-                      {reindexing === src.id ? 'Re-indexing…' : 'Re-index'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      <button
+                        className="btn btn-outline"
+                        style={{ fontSize: '0.78rem', padding: '0.3rem 0.75rem' }}
+                        disabled={reindexing === src.id}
+                        onClick={() => handleReindex(src.id)}
+                      >
+                        {reindexing === src.id ? 'Re-indexing…' : 'Re-index'}
+                      </button>
+                      <button
+                        className="btn"
+                        style={{ fontSize: '0.78rem', padding: '0.3rem 0.75rem', background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' }}
+                        disabled={deleting === src.id}
+                        onClick={() => handleDelete(src.id)}
+                      >
+                        {deleting === src.id ? '…' : 'Delete'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

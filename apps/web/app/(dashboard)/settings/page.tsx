@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-const DEMO_TENANT = '11111111-1111-1111-1111-111111111111';
+import { useTenant } from '@/lib/use-tenant';
 
 type ThemeId = 'dark' | 'minimal' | 'professional' | 'glass';
 
@@ -168,6 +167,7 @@ function ThemePreview({ theme }: { theme: (typeof WIDGET_THEMES)[number] }) {
 }
 
 export default function SettingsPage() {
+  const { tenantId, loading: tenantLoading } = useTenant();
   const [selectedTheme, setSelectedTheme] = useState<ThemeId>('dark');
   const [botName, setBotName] = useState('SmartRealtorAI');
   const [agencyName, setAgencyName] = useState('Demo Realty');
@@ -179,9 +179,10 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
 
-  // Load current settings from DB
+  // Load current settings from DB once we have the tenantId
   useEffect(() => {
-    fetch(`/api/settings?tenantId=${DEMO_TENANT}`)
+    if (tenantLoading) return;
+    fetch(`/api/settings?tenantId=${tenantId}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.name) setAgencyName(d.name);
@@ -192,7 +193,8 @@ export default function SettingsPage() {
         if (d.brand_color) setBrandColor(d.brand_color);
       })
       .catch(() => {/* silently ignore if DB not yet connected */});
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantLoading, tenantId]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -202,7 +204,7 @@ export default function SettingsPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tenantId: DEMO_TENANT,
+          tenantId,
           name: agencyName,
           websiteUrl,
           botName,
@@ -283,10 +285,9 @@ export default function SettingsPage() {
             <span style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>Your embed snippet with selected theme</span>
           </div>
           <pre className="dash-code-block">{`<script
-  src="https://cdn.smartrealtoriai.com/widget.js"
-  data-bot-id="YOUR_BOT_ID"
+  src="${typeof window !== 'undefined' ? window.location.origin : ''}/api/widget-script"
+  data-bot-id="${tenantId}"
   data-theme="${selectedTheme}"
-  data-bot-name="${botName}"
 ></script>`}</pre>
         </div>
       </section>
@@ -306,8 +307,12 @@ export default function SettingsPage() {
           <div className="form-field">
             <label className="form-label">Bot ID</label>
             <div className="settings-bot-id">
-              <code className="settings-code">11111111-1111-1111-1111-111111111111</code>
-              <button className="btn btn-outline" style={{ fontSize: '0.78rem', padding: '0.3rem 0.8rem', flexShrink: 0 }}>
+              <code className="settings-code">{tenantId}</code>
+              <button
+                className="btn btn-outline"
+                style={{ fontSize: '0.78rem', padding: '0.3rem 0.8rem', flexShrink: 0 }}
+                onClick={() => navigator.clipboard?.writeText(tenantId)}
+              >
                 Copy
               </button>
             </div>

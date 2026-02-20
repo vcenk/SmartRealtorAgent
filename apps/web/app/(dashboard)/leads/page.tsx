@@ -1,4 +1,5 @@
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
+import { getTenantId } from '@/lib/auth-tenant';
 
 /* ── Types ────────────────────────────────────────────────── */
 type Lead = {
@@ -51,9 +52,8 @@ async function getLeads(tenantId: string): Promise<Lead[]> {
 
 /* ── Page ─────────────────────────────────────────────────── */
 export default async function LeadsPage() {
-  // TODO: derive tenantId from session once auth middleware is complete.
-  const DEMO_TENANT = '11111111-1111-1111-1111-111111111111';
-  const leads = await getLeads(DEMO_TENANT);
+  const tenantId = await getTenantId();
+  const leads = await getLeads(tenantId);
 
   const total = leads.length;
   const captured = leads.filter((l) => stageLabel(l) === 'captured').length;

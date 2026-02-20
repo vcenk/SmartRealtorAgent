@@ -16,6 +16,7 @@ const navItems = [
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [agencyName, setAgencyName] = useState('Demo Realty');
   const pathname = usePathname();
   const router = useRouter();
 
@@ -25,6 +26,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       setAuthenticated(Boolean(data.session));
       setUserEmail(data.session?.user.email ?? null);
     });
+    // Fetch real agency name
+    fetch('/api/me')
+      .then((r) => r.json())
+      .then(({ tenantId }: { tenantId: string }) => fetch(`/api/settings?tenantId=${tenantId}`))
+      .then((r) => r.json())
+      .then((d: { name?: string }) => { if (d.name) setAgencyName(d.name); })
+      .catch(() => {});
   }, []);
 
   const handleSignOut = async () => {
@@ -102,7 +110,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <header className="dash-topbar">
           <div className="dash-topbar-inner">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>Demo Realty</span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{agencyName}</span>
               <span style={{ color: 'var(--line-bright)', fontSize: '0.8rem' }}>›</span>
               <span style={{ fontSize: '0.85rem', color: 'var(--ink)' }}>
                 {navItems.find((n) => n.href === pathname)?.label ?? 'Dashboard'}
