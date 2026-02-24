@@ -361,7 +361,7 @@ export default function KnowledgeBasePage() {
   };
 
   return (
-    <div>
+    <div className="dash-page">
       {showModal && (
         <AddSourceModal
           tenantId={tenantId}
@@ -382,13 +382,42 @@ export default function KnowledgeBasePage() {
           <h1 className="dash-page-title">Knowledge Base</h1>
           <p className="dash-page-sub">Manage the content sources that power your AI assistant's answers.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.6rem' }}>
-          <button className="btn btn-outline" style={{ fontSize: '0.88rem', padding: '0.6rem 1.3rem' }} onClick={() => setShowCrawlModal(true)}>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn btn-outline" style={{ fontSize: '0.9rem', padding: '0.7rem 1.5rem' }} onClick={() => setShowCrawlModal(true)}>
             🕷 Crawl Site
           </button>
-          <button className="btn btn-primary" style={{ fontSize: '0.88rem', padding: '0.6rem 1.3rem' }} onClick={() => setShowModal(true)}>
+          <button className="btn btn-primary" style={{ fontSize: '0.9rem', padding: '0.7rem 1.5rem' }} onClick={() => setShowModal(true)}>
             + Add Source
           </button>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="dash-stats-grid">
+        <div className="dash-stat-card">
+          <div className="dash-stat-card-icon">📚</div>
+          <div className="dash-stat-card-content">
+            <span className="dash-stat-card-value">{sources.length}</span>
+            <span className="dash-stat-card-label">Total Sources</span>
+          </div>
+        </div>
+        <div className="dash-stat-card">
+          <div className="dash-stat-card-icon">🧩</div>
+          <div className="dash-stat-card-content">
+            <span className="dash-stat-card-value" style={{ color: '#60a5fa' }}>
+              {sources.reduce((s, src) => s + (src.chunk_count || 0), 0)}
+            </span>
+            <span className="dash-stat-card-label">Total Chunks</span>
+          </div>
+        </div>
+        <div className="dash-stat-card">
+          <div className="dash-stat-card-icon">✅</div>
+          <div className="dash-stat-card-content">
+            <span className="dash-stat-card-value" style={{ color: '#4ade80' }}>
+              {sources.filter((s) => s.status === 'indexed').length}
+            </span>
+            <span className="dash-stat-card-label">Indexed</span>
+          </div>
         </div>
       </div>
 
@@ -410,14 +439,17 @@ export default function KnowledgeBasePage() {
       </div>
 
       {/* Sources table */}
-      <div className="dash-section-label" style={{ marginTop: '2rem' }}>Indexed Sources</div>
+      <div className="dash-section-label" style={{ marginTop: '1.5rem' }}>Indexed Sources</div>
       {loading ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)' }}>Loading…</div>
+        <div className="dash-loading-state">
+          <div className="dash-loading-spinner"></div>
+          <p>Loading sources...</p>
+        </div>
       ) : sources.length === 0 ? (
-        <div className="dash-empty-state" style={{ marginTop: '1rem' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📚</div>
-          <p style={{ fontWeight: 600, marginBottom: '0.3rem' }}>No sources yet</p>
-          <p className="dash-empty-note">Add your first URL or paste text to get started.</p>
+        <div className="dash-empty-card">
+          <div className="dash-empty-card-icon">📚</div>
+          <h3 className="dash-empty-card-title">No sources yet</h3>
+          <p className="dash-empty-card-desc">Add your first URL or paste text to get started.</p>
         </div>
       ) : (
         <div className="dash-table-wrap">

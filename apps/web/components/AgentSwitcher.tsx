@@ -41,9 +41,13 @@ export function AgentSwitcher({ onCreateClick }: Props) {
         <button
           className="agent-switcher-trigger agent-switcher-create"
           onClick={onCreateClick}
+          style={{
+            background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(59, 130, 246, 0.15))',
+            borderColor: 'rgba(124, 58, 237, 0.3)',
+          }}
         >
-          <span className="agent-switcher-icon">+</span>
-          <span className="agent-switcher-name">Create Your First Agent</span>
+          <span className="agent-switcher-icon" style={{ background: 'linear-gradient(135deg, #7c3aed, #3b82f6)' }}>+</span>
+          <span className="agent-switcher-name" style={{ color: '#a855f7' }}>Create Your First Agent</span>
         </button>
       </div>
     );

@@ -3,7 +3,9 @@ import { Metadata } from 'next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getBlogSlugs, readBlogPost } from '@/lib/seo-content';
+import agentsLogo from '@/content/asset/agents.png';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -75,16 +77,7 @@ export default async function BlogPostPage({ params }: Props) {
         <div className="container">
           <nav className="nav-inner">
             <Link href="/" className="nav-logo">
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                <rect width="28" height="28" rx="8" fill="url(#lg)" />
-                <path d="M8 20V12l6-5 6 5v8h-4v-5h-4v5H8Z" fill="white" fillOpacity="0.9" />
-                <defs>
-                  <linearGradient id="lg" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#7c3aed" />
-                    <stop offset="1" stopColor="#3b82f6" />
-                  </linearGradient>
-                </defs>
-              </svg>
+              <Image src={agentsLogo} alt="Smart Realtor Agent" width={28} height={28} style={{ borderRadius: 8 }} />
               Smart Realtor Agent
             </Link>
 

@@ -10,6 +10,8 @@ secondaryKeywords:
   - chatbot script tag integration
   - real estate lead capture automation
   - website ai chatbot setup
+publishedAt: 2026-01-18
+author: Smart Realtor Agent Team
 ---
 
 # How to Embed an AI Chatbot on Your Real Estate Website (Step-by-Step)
@@ -122,11 +124,8 @@ Embedding the right architecture is what determines:
 - Data security
 - Long-term scalability
 
-For a deeper explanation of AI chatbot systems for real estate agents, read:
-→ /blog/ai-chatbot-for-real-estate-agents
+**Related Reading:**
 
-To compare RAG vs generic chatbots:
-→ /blog/rag-vs-generic-ai-chatbots-for-real-estate
-
-Or explore full features:
-→ /features
+- [AI Chatbot for Real Estate Agents - Complete Guide](/blog/ai-chatbot-for-real-estate-agents)
+- [RAG vs Generic AI Chatbots for Real Estate](/blog/rag-vs-generic-ai-chatbots-for-real-estate)
+- [Explore Smart Realtor Agent Features](/features)

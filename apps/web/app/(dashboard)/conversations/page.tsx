@@ -119,7 +119,7 @@ export default function ConversationsPage() {
   }, [tenantLoading, tenantId]);
 
   return (
-    <div>
+    <div className="dash-page">
       {selected && (
         <MessageThread
           tenantId={tenantId}
@@ -133,27 +133,47 @@ export default function ConversationsPage() {
           <h1 className="dash-page-title">Conversations</h1>
           <p className="dash-page-sub">All chat sessions handled by your AI assistant.</p>
         </div>
-        <div className="dash-stats-row">
-          <div className="dash-stat-pill">
-            <span className="dash-stat-pill-num">{conversations.length}</span>
-            <span className="dash-stat-pill-label">Total</span>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="dash-stats-grid">
+        <div className="dash-stat-card">
+          <div className="dash-stat-card-icon">💬</div>
+          <div className="dash-stat-card-content">
+            <span className="dash-stat-card-value">{conversations.length}</span>
+            <span className="dash-stat-card-label">Total Conversations</span>
           </div>
-          <div className="dash-stat-pill">
-            <span className="dash-stat-pill-num">
+        </div>
+        <div className="dash-stat-card">
+          <div className="dash-stat-card-icon">📝</div>
+          <div className="dash-stat-card-content">
+            <span className="dash-stat-card-value" style={{ color: '#60a5fa' }}>
               {conversations.reduce((s, c) => s + c.messageCount, 0)}
             </span>
-            <span className="dash-stat-pill-label">Messages</span>
+            <span className="dash-stat-card-label">Total Messages</span>
+          </div>
+        </div>
+        <div className="dash-stat-card">
+          <div className="dash-stat-card-icon">📈</div>
+          <div className="dash-stat-card-content">
+            <span className="dash-stat-card-value" style={{ color: '#4ade80' }}>
+              {conversations.length > 0 ? Math.round(conversations.reduce((s, c) => s + c.messageCount, 0) / conversations.length) : 0}
+            </span>
+            <span className="dash-stat-card-label">Avg Messages/Chat</span>
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--muted)' }}>Loading…</div>
+        <div className="dash-loading-state">
+          <div className="dash-loading-spinner"></div>
+          <p>Loading conversations...</p>
+        </div>
       ) : conversations.length === 0 ? (
-        <div className="dash-empty-state">
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>💬</div>
-          <p style={{ fontWeight: 600, marginBottom: '0.4rem' }}>No conversations yet</p>
-          <p className="dash-empty-note">
+        <div className="dash-empty-card">
+          <div className="dash-empty-card-icon">💬</div>
+          <h3 className="dash-empty-card-title">No conversations yet</h3>
+          <p className="dash-empty-card-desc">
             Conversations appear here once visitors start chatting with your widget.
           </p>
         </div>

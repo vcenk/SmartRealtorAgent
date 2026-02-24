@@ -67,30 +67,44 @@ export default function LeadsPage() {
   const qualifying = leads.filter((l) => stageLabel(l) === 'qualifying').length;
 
   return (
-    <div>
+    <div className="dash-page">
       <div className="dash-page-header">
         <div>
           <h1 className="dash-page-title">Leads</h1>
           <p className="dash-page-sub">Buyer and seller leads captured by your AI assistant.</p>
         </div>
-        <div className="dash-stats-row">
-          <div className="dash-stat-pill">
-            <span className="dash-stat-pill-num">{total}</span>
-            <span className="dash-stat-pill-label">Total</span>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="dash-stats-grid">
+        <div className="dash-stat-card">
+          <div className="dash-stat-card-icon">🎯</div>
+          <div className="dash-stat-card-content">
+            <span className="dash-stat-card-value">{total}</span>
+            <span className="dash-stat-card-label">Total Leads</span>
           </div>
-          <div className="dash-stat-pill">
-            <span className="dash-stat-pill-num" style={{ color: '#4ade80' }}>{captured}</span>
-            <span className="dash-stat-pill-label">Captured</span>
+        </div>
+        <div className="dash-stat-card">
+          <div className="dash-stat-card-icon">✅</div>
+          <div className="dash-stat-card-content">
+            <span className="dash-stat-card-value" style={{ color: '#4ade80' }}>{captured}</span>
+            <span className="dash-stat-card-label">Captured</span>
           </div>
-          <div className="dash-stat-pill">
-            <span className="dash-stat-pill-num" style={{ color: '#fbbf24' }}>{qualifying}</span>
-            <span className="dash-stat-pill-label">Qualifying</span>
+        </div>
+        <div className="dash-stat-card">
+          <div className="dash-stat-card-icon">⏳</div>
+          <div className="dash-stat-card-content">
+            <span className="dash-stat-card-value" style={{ color: '#fbbf24' }}>{qualifying}</span>
+            <span className="dash-stat-card-label">Qualifying</span>
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--muted)' }}>Loading...</div>
+        <div className="dash-loading-state">
+          <div className="dash-loading-spinner"></div>
+          <p>Loading leads...</p>
+        </div>
       ) : leads.length > 0 ? (
         <div className="dash-table-wrap">
           <table className="dash-table">
@@ -143,10 +157,10 @@ export default function LeadsPage() {
           </table>
         </div>
       ) : (
-        <div className="dash-empty-state">
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎯</div>
-          <p style={{ fontWeight: 600, marginBottom: '0.4rem' }}>No leads yet</p>
-          <p className="dash-empty-note">
+        <div className="dash-empty-card">
+          <div className="dash-empty-card-icon">🎯</div>
+          <h3 className="dash-empty-card-title">No leads yet</h3>
+          <p className="dash-empty-card-desc">
             Live leads appear here automatically when your widget captures buyer or seller intent.
           </p>
         </div>

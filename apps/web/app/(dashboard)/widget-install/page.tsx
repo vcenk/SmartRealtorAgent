@@ -43,14 +43,14 @@ export default function WidgetInstallPage() {
 ></script>`;
 
   return (
-    <div>
+    <div className="dash-page">
       {/* Page header */}
-      <div className="dash-page-header" style={{ marginBottom: '2.5rem' }}>
+      <div className="dash-page-header">
         <div>
           <h1 className="dash-page-title">Widget Install</h1>
           <p className="dash-page-sub">Embed the AI chatbot on your agency website in minutes.</p>
         </div>
-        <div className="badge">🔌 One script tag</div>
+        <div className="badge" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>🔌 One Script Tag</div>
       </div>
 
       {/* Steps */}

@@ -10,6 +10,7 @@ import { AgentSwitcher } from '@/components/AgentSwitcher';
 import { CreateAgentModal } from '@/components/CreateAgentModal';
 
 const navItems = [
+  { href: '/agents', label: 'Agents', icon: '🤖' },
   { href: '/leads', label: 'Leads', icon: '🎯' },
   { href: '/conversations', label: 'Conversations', icon: '💬' },
   { href: '/knowledge-base', label: 'Knowledge Base', icon: '📚' },

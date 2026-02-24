@@ -9,6 +9,8 @@ secondaryKeywords:
   - buyer seller qualification chatbot
   - real estate website conversion
   - real estate ai assistant leads
+publishedAt: 2026-01-22
+author: Smart Realtor Agent Team
 ---
 
 # How AI Chatbots Capture Real Estate Leads Automatically
@@ -95,5 +97,4 @@ It should qualify.
 
 ---
 
-For a deeper overview of AI chatbots for real estate agents, read:  
-→ /blog/ai-chatbot-for-real-estate-agents
+For a deeper overview of AI chatbots for real estate agents, read our complete guide: [AI Chatbot for Real Estate Agents](/blog/ai-chatbot-for-real-estate-agents).

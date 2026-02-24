@@ -222,12 +222,12 @@ export default function SettingsPage() {
   };
 
   return (
-    <div>
+    <div className="dash-page">
       {/* Page header */}
-      <div className="dash-page-header" style={{ marginBottom: '2.5rem' }}>
+      <div className="dash-page-header">
         <div>
           <h1 className="dash-page-title">Settings</h1>
-          <p className="dash-page-sub">Manage your tenant profile, widget theme, and policy configuration.</p>
+          <p className="dash-page-sub">Manage your agent profile, widget theme, and policy configuration.</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           {saveMsg && (
@@ -237,7 +237,7 @@ export default function SettingsPage() {
           )}
           <button
             className="btn btn-primary"
-            style={{ fontSize: '0.88rem', padding: '0.6rem 1.3rem' }}
+            style={{ fontSize: '0.9rem', padding: '0.7rem 1.5rem' }}
             onClick={handleSave}
             disabled={saving}
           >
@@ -247,7 +247,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ── Widget Theme Selector ────────────────────────── */}
-      <section style={{ marginBottom: '2.5rem' }}>
+      <section style={{ marginBottom: '2rem' }}>
         <div className="dash-section-label" style={{ marginBottom: '1rem' }}>
           Widget Theme — choose the look of your embedded chatbot
         </div>
