@@ -61,7 +61,7 @@ function CrawlSiteModal({
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
 
-      while (true) {
+      for (;;) {
         const { done: streamDone, value } = await reader.read();
         if (streamDone) break;
         const lines = decoder.decode(value, { stream: true }).split('\n').filter(Boolean);
@@ -296,7 +296,6 @@ export default function KnowledgeBasePage() {
 
   useEffect(() => {
     if (!tenantLoading) fetchSources();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantLoading, tenantId]);
 
   const handleReindex = async (sourceId: string) => {
