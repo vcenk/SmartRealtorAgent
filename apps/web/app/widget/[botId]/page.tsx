@@ -101,8 +101,10 @@ export default function WidgetPage({ params }: { params: Promise<{ botId: string
       if (!res.body) throw new Error('No stream');
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      for (;;) {
+      let streamDone = false;
+      while (!streamDone) {
         const { done, value } = await reader.read();
+        streamDone = done;
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
         setMessages((prev) => {

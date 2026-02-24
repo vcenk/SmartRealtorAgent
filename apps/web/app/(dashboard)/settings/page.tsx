@@ -193,6 +193,7 @@ export default function SettingsPage() {
         if (d.brand_color) setBrandColor(d.brand_color);
       })
       .catch(() => {/* silently ignore if DB not yet connected */});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantLoading, tenantId]);
 
   const handleSave = async () => {
