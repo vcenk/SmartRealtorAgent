@@ -135,7 +135,7 @@ const buildSystemPrompt = (
       ? ctx.map((c, i) => `[Source ${i + 1}: ${c.title}]\n${c.snippet}`).join('\n\n---\n\n')
       : 'No specific knowledge base entries found for this query.';
 
-  return `You are SmartRealtorAI, a helpful AI assistant for a real estate agency.
+  return `You are Smart Realtor Agent, a helpful AI assistant for a real estate agency.
 You answer questions about properties, neighborhoods, buying/selling processes, and agency services.
 
 RULES:

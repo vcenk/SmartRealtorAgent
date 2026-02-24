@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import '../../globals.css';
 
-export const metadata = { title: 'SmartRealtorAI Chat' };
+export const metadata = { title: 'Smart Realtor Agent Chat' };
 
 /** Minimal layout — no sidebar, no dashboard chrome. */
 export default function WidgetLayout({ children }: { children: ReactNode }) {

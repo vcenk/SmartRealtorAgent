@@ -15,7 +15,7 @@
 import { parse as parseHtml, type HTMLElement } from 'node-html-parser';
 
 /* ── Constants ────────────────────────────────────────────── */
-const BOT_UA = 'SmartRealtorAI-Indexer/1.0 (compatible; +https://smartrealtoriai.com/bot)';
+const BOT_UA = 'Smart Realtor Agent Indexer/1.0 (compatible; +https://smartrealtoragent.com/bot)';
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_CRAWL_PAGES = 50;
 const MAX_CONTENT_CHARS = 100_000;
@@ -281,7 +281,7 @@ async function isAllowedByRobots(url: string): Promise<boolean> {
 
     for (const rawLine of text.split('\n')) {
       const line = rawLine.trim();
-      if (/^user-agent:\s*\*/i.test(line) || /^user-agent:\s*SmartRealtorAI/i.test(line)) {
+      if (/^user-agent:\s*\*/i.test(line) || /^user-agent:\s*Smart Realtor Agent/i.test(line)) {
         inOurBlock = true;
       } else if (/^user-agent:/i.test(line)) {
         inOurBlock = false;

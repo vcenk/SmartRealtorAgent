@@ -5,6 +5,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createBrowserSupabaseClient } from '@/lib/supabase-client';
+import { AgentProvider, useAgents } from '@/lib/agent-context';
+import { AgentSwitcher } from '@/components/AgentSwitcher';
+import { CreateAgentModal } from '@/components/CreateAgentModal';
 
 const navItems = [
   { href: '/leads', label: 'Leads', icon: '🎯' },
@@ -14,10 +17,10 @@ const navItems = [
   { href: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+function DashboardContent({ children }: { children: ReactNode }) {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [agencyName, setAgencyName] = useState('Demo Realty');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const { activeAgent, email } = useAgents();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -25,25 +28,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     const supabase = createBrowserSupabaseClient();
     supabase.auth.getSession().then(({ data }) => {
       setAuthenticated(Boolean(data.session));
-      setUserEmail(data.session?.user.email ?? null);
     });
-    // Fetch real agency name
-    fetch('/api/me')
-      .then((r) => r.json())
-      .then(({ tenantId }: { tenantId: string }) => fetch(`/api/settings?tenantId=${tenantId}`))
-      .then((r) => r.json())
-      .then((d: { name?: string }) => { if (d.name) setAgencyName(d.name); })
-      .catch(() => {});
   }, []);
 
   const handleSignOut = async () => {
     const supabase = createBrowserSupabaseClient();
     await supabase.auth.signOut();
+    localStorage.removeItem('sra_active_agent_id');
     router.push('/login');
   };
 
   return (
     <div className="dash-root">
+      {showCreateModal && <CreateAgentModal onClose={() => setShowCreateModal(false)} />}
+
       {/* Sidebar */}
       <aside className="dash-sidebar">
         <div className="dash-sidebar-inner">
@@ -61,6 +59,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </svg>
             <span>SmartRealtor<span className="gradient-text">AI</span></span>
           </Link>
+
+          {/* Agent Switcher */}
+          <AgentSwitcher onCreateClick={() => setShowCreateModal(true)} />
 
           {/* Nav label */}
           <div className="dash-nav-label">Dashboard</div>
@@ -84,9 +85,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
           {/* Bottom */}
           <div className="dash-sidebar-bottom">
-            {userEmail && (
+            {email && (
               <div style={{ fontSize: '0.75rem', color: 'var(--muted2)', padding: '0 0.5rem 0.5rem', wordBreak: 'break-all' }}>
-                {userEmail}
+                {email}
               </div>
             )}
             <Link href="/" className="dash-nav-item" style={{ color: 'var(--muted2)' }}>
@@ -111,7 +112,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <header className="dash-topbar">
           <div className="dash-topbar-inner">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{agencyName}</span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+                {activeAgent?.name ?? 'Demo Realty'}
+              </span>
               <span style={{ color: 'var(--line-bright)', fontSize: '0.8rem' }}>›</span>
               <span style={{ fontSize: '0.85rem', color: 'var(--ink)' }}>
                 {navItems.find((n) => n.href === pathname)?.label ?? 'Dashboard'}
@@ -140,5 +143,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: ReactNode }) {
+  return (
+    <AgentProvider>
+      <DashboardContent>{children}</DashboardContent>
+    </AgentProvider>
   );
 }

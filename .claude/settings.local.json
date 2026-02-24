@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm dev)",
+      "Bash(claude mcp add:*)",
+      "Bash(ls:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm --filter web exec tsc:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx skills add:*)",
+      "Bash(cat:*)",
+      "Bash(\"C:\\\\Users\\\\User\\\\Desktop\\\\AI_APP_Projects\\\\SmartRealtorAgent\\\\apps\\\\web\\\\app\\\\\\(marketing\\)\\\\[slug]\\\\page.tsx\")",
+      "Bash(pnpm --filter web build:*)",
+      "WebFetch(domain:assistia.framer.website)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}

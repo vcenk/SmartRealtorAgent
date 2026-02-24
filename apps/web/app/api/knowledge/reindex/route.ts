@@ -7,7 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
 import { scrapePage } from '@/lib/scraper';
-import { embedText, storeChunks } from '../ingest/route';
+import { storeChunks } from '../ingest/route';
+import { verifyAgentOwnership, DEMO_AGENT } from '@/lib/auth-tenant';
 
 const bodySchema = z.object({
   tenantId: z.string().uuid(),
@@ -21,6 +22,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const { tenantId, sourceId } = parsed.data;
+
+  // Verify ownership
+  if (tenantId !== DEMO_AGENT) {
+    const { isOwner } = await verifyAgentOwnership(request, tenantId);
+    if (!isOwner) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+  }
+
   const supabase = createServiceSupabaseClient();
 
   const { data: src, error: srcErr } = await supabase
@@ -69,5 +79,3 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ sourceId, chunksCreated: stored });
 }
 
-// Re-export embedText so crawl route can use it without re-declaring
-export { embedText };

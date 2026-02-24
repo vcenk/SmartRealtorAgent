@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useTenant } from '@/lib/use-tenant';
+import { useAgents } from '@/lib/agent-context';
 
 type Source = {
   id: string;
@@ -275,7 +275,7 @@ function AddSourceModal({
 
 /* ── Page ─────────────────────────────────────────────────── */
 export default function KnowledgeBasePage() {
-  const { tenantId, loading: tenantLoading } = useTenant();
+  const { activeAgentId: tenantId, loading: tenantLoading } = useAgents();
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);

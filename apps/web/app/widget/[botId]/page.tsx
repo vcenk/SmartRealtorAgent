@@ -123,7 +123,7 @@ export default function WidgetPage({ params }: { params: Promise<{ botId: string
   };
 
   const theme = THEMES[settings.widget_theme ?? 'dark'] ?? THEMES.dark;
-  const botName = settings.bot_name ?? 'SmartRealtorAI';
+  const botName = settings.bot_name ?? 'Smart Realtor Agent';
   const welcomeMsg = settings.welcome_message ?? "Hi! I'm your AI real estate assistant. Ask me anything!";
   const accent = settings.brand_color ?? '#7c3aed';
 

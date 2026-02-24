@@ -76,7 +76,7 @@ const buildSystemPrompt = (ctx: Array<{ title: string; snippet: string }>, tenan
   const ctxBlock = ctx.length > 0
     ? ctx.map((c, i) => `[Source ${i + 1}: ${c.title}]\n${c.snippet}`).join('\n\n---\n\n')
     : 'No specific knowledge base entries found for this query.';
-  const name = tenant.bot_name ?? 'SmartRealtorAI';
+  const name = tenant.bot_name ?? 'Smart Realtor Agent';
   return `You are ${name}, a helpful AI assistant for a real estate agency.
 Answer questions about properties, neighborhoods, buying/selling processes, and agency services.
 Be concise, warm, and professional. Only make factual claims supported by the knowledge base context.

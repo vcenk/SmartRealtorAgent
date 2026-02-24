@@ -1,6 +1,6 @@
 /**
  * POST /api/knowledge/ingest
- * Ingests a single knowledge source (URL or raw text) for a tenant.
+ * Ingests a single knowledge source (URL or raw text) for an agent.
  * Pipeline: fetch + parse → extract JSON-LD → chunk → embed → store.
  *
  * For multi-page site crawling use POST /api/knowledge/crawl instead.
@@ -11,12 +11,13 @@ import OpenAI from 'openai';
 import { chunkText } from '@smartrealtor/rag';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
 import { scrapePage } from '@/lib/scraper';
+import { verifyAgentOwnership, DEMO_AGENT } from '@/lib/auth-tenant';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const requestSchema = z
   .object({
-    tenantId: z.string().uuid(),
+    tenantId: z.string().uuid(), // agentId (keeping tenantId name for backwards compatibility)
     title: z.string().min(1).max(300).optional(), // auto-derived from page title when not set
     url: z.string().url().optional(),
     content: z.string().min(10).optional(),
@@ -81,6 +82,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const { tenantId, url, content } = parsed.data;
+
+  // Verify ownership (demo agent allowed for backwards compatibility)
+  if (tenantId !== DEMO_AGENT) {
+    const { isOwner } = await verifyAgentOwnership(request, tenantId);
+    if (!isOwner) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+  }
+
   const supabase = createServiceSupabaseClient();
 
   // 1. Get page content

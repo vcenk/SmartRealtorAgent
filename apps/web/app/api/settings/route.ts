@@ -1,10 +1,11 @@
 /**
- * GET  /api/settings?tenantId=xxx  — fetch tenant settings
- * PUT  /api/settings               — update tenant settings
+ * GET  /api/settings?tenantId=xxx  — fetch agent settings
+ * PUT  /api/settings               — update agent settings
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
+import { verifyAgentOwnership, DEMO_AGENT } from '@/lib/auth-tenant';
 
 const updateSchema = z.object({
   tenantId: z.string().uuid(),
@@ -39,6 +40,15 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
   }
 
   const { tenantId, name, websiteUrl, botName, welcomeMessage, widgetTheme, brandColor } = parsed.data;
+
+  // Verify ownership (demo agent updates are allowed for backwards compatibility during onboarding)
+  if (tenantId !== DEMO_AGENT) {
+    const { isOwner } = await verifyAgentOwnership(request, tenantId);
+    if (!isOwner) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+  }
+
   const supabase = createServiceSupabaseClient();
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };

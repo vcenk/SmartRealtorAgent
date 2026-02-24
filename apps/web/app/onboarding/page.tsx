@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const DEMO_TENANT = '11111111-1111-1111-1111-111111111111';
+const STORAGE_KEY = 'sra_active_agent_id';
 
 type Step = 'agency' | 'knowledge' | 'widget';
 
@@ -14,7 +14,7 @@ const STEPS: Array<{ id: Step; label: string; icon: string }> = [
 ];
 
 /* ── Step 1 ─────────────────────────────────────────────── */
-function StepAgency({ onNext }: { onNext: () => void }) {
+function StepAgency({ onNext }: { onNext: (agentId: string) => void }) {
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [saving, setSaving] = useState(false);
@@ -25,13 +25,20 @@ function StepAgency({ onNext }: { onNext: () => void }) {
     setSaving(true);
     setError('');
     try {
-      const res = await fetch('/api/settings', {
-        method: 'PUT',
+      // Create a new agent
+      const res = await fetch('/api/agents', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenantId: DEMO_TENANT, name: name.trim(), websiteUrl: url.trim() }),
+        body: JSON.stringify({ name: name.trim(), websiteUrl: url.trim() || undefined }),
       });
-      if (!res.ok) throw new Error('Failed to save');
-      onNext();
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error?.message || data.error || 'Failed to create agent');
+      }
+      const agent = await res.json();
+      // Store the new agent ID
+      localStorage.setItem(STORAGE_KEY, agent.id);
+      onNext(agent.id);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -53,14 +60,14 @@ function StepAgency({ onNext }: { onNext: () => void }) {
       </div>
       {error && <p style={{ color: '#f87171', fontSize: '0.83rem' }}>{error}</p>}
       <button className="btn btn-primary" onClick={submit} disabled={saving} style={{ marginTop: '1rem', width: '100%' }}>
-        {saving ? 'Saving…' : 'Continue →'}
+        {saving ? 'Creating Agent…' : 'Continue →'}
       </button>
     </div>
   );
 }
 
 /* ── Step 2 ─────────────────────────────────────────────── */
-function StepKnowledge({ onNext }: { onNext: () => void }) {
+function StepKnowledge({ agentId, onNext }: { agentId: string; onNext: () => void }) {
   const [mode, setMode] = useState<'url' | 'text' | 'skip'>('url');
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
@@ -78,7 +85,7 @@ function StepKnowledge({ onNext }: { onNext: () => void }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tenantId: DEMO_TENANT,
+          tenantId: agentId,
           title: title.trim(),
           url: mode === 'url' ? url.trim() : undefined,
           content: mode === 'text' ? content.trim() : undefined,
@@ -164,10 +171,11 @@ function StepKnowledge({ onNext }: { onNext: () => void }) {
 }
 
 /* ── Step 3 ─────────────────────────────────────────────── */
-function StepWidget({ onFinish }: { onFinish: () => void }) {
+function StepWidget({ agentId, onFinish }: { agentId: string; onFinish: () => void }) {
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://yourapp.com';
   const snippet = `<script
-  src="https://cdn.smartrealtoriai.com/widget.js"
-  data-bot-id="${DEMO_TENANT}"
+  src="${origin}/api/widget-script"
+  data-bot-id="${agentId}"
   data-theme="dark"
 ></script>`;
 
@@ -195,9 +203,15 @@ function StepWidget({ onFinish }: { onFinish: () => void }) {
 /* ── Page ─────────────────────────────────────────────────── */
 export default function OnboardingPage() {
   const [step, setStep] = useState<Step>('agency');
+  const [agentId, setAgentId] = useState<string>('');
   const router = useRouter();
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
+
+  const handleAgencyComplete = (newAgentId: string) => {
+    setAgentId(newAgentId);
+    setStep('knowledge');
+  };
 
   return (
     <div className="onboarding-root">
@@ -217,6 +231,15 @@ export default function OnboardingPage() {
           SmartRealtor<span className="gradient-text">AI</span>
         </span>
       </div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.75rem' }}>
+        <button
+          className="btn btn-outline"
+          onClick={() => router.push('/leads')}
+          style={{ fontSize: '0.82rem', padding: '0.45rem 1rem' }}
+        >
+          Skip to Dashboard
+        </button>
+      </div>
 
       {/* Progress */}
       <div className="onboarding-progress">
@@ -233,9 +256,9 @@ export default function OnboardingPage() {
 
       {/* Card */}
       <div className="onboarding-card">
-        {step === 'agency' && <StepAgency onNext={() => setStep('knowledge')} />}
-        {step === 'knowledge' && <StepKnowledge onNext={() => setStep('widget')} />}
-        {step === 'widget' && <StepWidget onFinish={() => router.push('/leads')} />}
+        {step === 'agency' && <StepAgency onNext={handleAgencyComplete} />}
+        {step === 'knowledge' && <StepKnowledge agentId={agentId} onNext={() => setStep('widget')} />}
+        {step === 'widget' && <StepWidget agentId={agentId} onFinish={() => router.push('/leads')} />}
       </div>
 
       <p style={{ textAlign: 'center', color: 'var(--muted2)', fontSize: '0.82rem', marginTop: '2rem' }}>

@@ -1,5 +1,7 @@
-import { createServiceSupabaseClient } from '@/lib/supabase-server';
-import { getTenantId } from '@/lib/auth-tenant';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useAgents } from '@/lib/agent-context';
 
 /* ── Types ────────────────────────────────────────────────── */
 type Lead = {
@@ -33,27 +35,32 @@ function stageLabel(lead: Lead): string {
   return (lead.payload.stage ?? 'new').toLowerCase();
 }
 
-/* ── Server data fetch ────────────────────────────────────── */
-async function getLeads(tenantId: string): Promise<Lead[]> {
-  try {
-    const supabase = createServiceSupabaseClient();
-    const { data, error } = await supabase
-      .from('leads')
-      .select('id, payload, created_at')
-      .eq('tenant_id', tenantId)
-      .order('created_at', { ascending: false })
-      .limit(200);
-    if (error) throw new Error(error.message);
-    return (data ?? []) as Lead[];
-  } catch {
-    return [];
-  }
-}
-
 /* ── Page ─────────────────────────────────────────────────── */
-export default async function LeadsPage() {
-  const tenantId = await getTenantId();
-  const leads = await getLeads(tenantId);
+export default function LeadsPage() {
+  const { activeAgentId: tenantId, loading: agentLoading } = useAgents();
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (agentLoading) return;
+
+    async function fetchLeads() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/leads?tenantId=${tenantId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setLeads(data);
+        }
+      } catch {
+        // Silently fail
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchLeads();
+  }, [tenantId, agentLoading]);
 
   const total = leads.length;
   const captured = leads.filter((l) => stageLabel(l) === 'captured').length;
@@ -82,7 +89,9 @@ export default async function LeadsPage() {
         </div>
       </div>
 
-      {leads.length > 0 ? (
+      {loading ? (
+        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--muted)' }}>Loading...</div>
+      ) : leads.length > 0 ? (
         <div className="dash-table-wrap">
           <table className="dash-table">
             <thead>

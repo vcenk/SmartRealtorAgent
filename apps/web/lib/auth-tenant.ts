@@ -1,18 +1,30 @@
 /**
- * Server-side and API-route tenant resolution.
+ * Server-side and API-route tenant/agent resolution.
  *
  * Supabase stores the auth token in a cookie named:
  *   sb-<project-ref>-auth-token
  * The value is a JSON string containing { access_token, refresh_token, … }.
  *
- * We extract the access_token, verify it with the service client, look up
- * the user's tenant via the `profiles` table, and fall back to the demo
- * tenant when auth is not configured / user is anonymous.
+ * We extract the access_token, verify it with the service client, and resolve
+ * the user's active agent. Falls back to the demo tenant/agent when auth is
+ * not configured / user is anonymous.
  */
 import type { NextRequest } from 'next/server';
 import { createServiceSupabaseClient } from './supabase-server';
 
 export const DEMO_TENANT = '11111111-1111-1111-1111-111111111111';
+export const DEMO_AGENT = DEMO_TENANT; // Alias for clarity
+
+export type Agent = {
+  id: string;
+  name: string;
+  website_url: string | null;
+  bot_name: string | null;
+  widget_theme: string;
+  brand_color: string;
+  created_at: string;
+  updated_at: string;
+};
 
 /* ── Helpers ──────────────────────────────────────────────── */
 function getProjectRef(): string | null {
@@ -118,4 +130,61 @@ export async function getUserInfo(
   } catch {
     return { tenantId: DEMO_TENANT, userId: null, email: null };
   }
+}
+
+/* ── Get user's agents ────────────────────────────────────── */
+export async function getUserAgents(
+  request: NextRequest,
+): Promise<{ agents: Agent[]; userId: string | null; email: string | null }> {
+  const ref = getProjectRef();
+  if (!ref) return { agents: [], userId: null, email: null };
+  try {
+    const raw = request.cookies.get(`sb-${ref}-auth-token`)?.value;
+    const token = parseAccessToken(raw);
+    if (!token) return { agents: [], userId: null, email: null };
+
+    const supabase = createServiceSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser(token);
+    if (!user) return { agents: [], userId: null, email: null };
+
+    const { data: agents } = await supabase
+      .from('tenants')
+      .select('id, name, website_url, bot_name, widget_theme, brand_color, created_at, updated_at')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false });
+
+    return {
+      agents: (agents ?? []) as Agent[],
+      userId: user.id,
+      email: user.email ?? null,
+    };
+  } catch {
+    return { agents: [], userId: null, email: null };
+  }
+}
+
+/* ── Verify agent ownership ───────────────────────────────── */
+export async function verifyAgentOwnership(
+  request: NextRequest,
+  agentId: string,
+): Promise<{ isOwner: boolean; userId: string | null }> {
+  const { userId } = await getUserInfo(request);
+  if (!userId) return { isOwner: false, userId: null };
+
+  // Demo agent is accessible to everyone
+  if (agentId === DEMO_AGENT) return { isOwner: true, userId };
+
+  const supabase = createServiceSupabaseClient();
+  const { data } = await supabase
+    .from('tenants')
+    .select('owner_id')
+    .eq('id', agentId)
+    .single();
+
+  return {
+    isOwner: data?.owner_id === userId,
+    userId,
+  };
 }

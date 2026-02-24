@@ -17,7 +17,7 @@ const WIDGET_JS = /* javascript */ `
   var theme   = (script && script.getAttribute('data-theme')) || 'dark';
   var origin  = script ? new URL(script.src).origin : window.location.origin;
 
-  if (!botId) { console.warn('[SmartRealtorAI] data-bot-id is required'); return; }
+  if (!botId) { console.warn('[Smart Realtor Agent] data-bot-id is required'); return; }
 
   /* ── Styles ──────────────────────────────────────────── */
   var css = \`
@@ -73,7 +73,7 @@ const WIDGET_JS = /* javascript */ `
   iframe.src = origin + '/widget/' + encodeURIComponent(botId) + '?theme=' + encodeURIComponent(theme);
   iframe.setAttribute('allow', 'clipboard-write');
   iframe.setAttribute('loading', 'lazy');
-  iframe.title = 'SmartRealtorAI Chat';
+  iframe.title = 'Smart Realtor Agent Chat';
   panel.appendChild(iframe);
   document.body.appendChild(panel);
 

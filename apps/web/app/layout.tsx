@@ -1,26 +1,23 @@
 import './globals.css';
-import { Space_Grotesk, Manrope } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
-const heading = Space_Grotesk({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-heading',
-});
-
-const body = Manrope({
-  subsets: ['latin'],
-  variable: '--font-body',
+  variable: '--font-inter',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'SmartRealtorAgent',
-  description: 'Multi-tenant RAG chatbot platform for real estate agents.',
+  title: 'Smart Realtor Agent - AI Chatbot for Real Estate Agents',
+  description: 'Deploy an embeddable AI chatbot for your real estate website. Citation-backed responses, automatic lead qualification, and tenant-isolated architecture.',
+  keywords: 'real estate ai chatbot, ai assistant for realtors, lead generation chatbot, embeddable chatbot',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${heading.variable} ${body.variable}`}>
+    <html lang="en" className={inter.variable}>
       <body>{children}</body>
     </html>
   );

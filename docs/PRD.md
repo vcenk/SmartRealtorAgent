@@ -2,7 +2,7 @@
 
 ## Product
 
-SmartRealtorAgent is a multi-tenant SaaS that gives real estate agents an embeddable AI chatbot backed by their own knowledge base.
+Smart Realtor Agent is a multi-tenant SaaS that gives real estate agents an embeddable AI chatbot backed by their own knowledge base.
 
 ## Objectives
 

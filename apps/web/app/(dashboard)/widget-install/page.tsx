@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useTenant } from '@/lib/use-tenant';
+import { useAgents } from '@/lib/agent-context';
 
 type ThemeId = 'dark' | 'minimal' | 'professional' | 'glass';
 
@@ -33,7 +33,7 @@ const steps = [
 
 export default function WidgetInstallPage() {
   const [theme, setTheme] = useState<ThemeId>('dark');
-  const { tenantId } = useTenant();
+  const { activeAgentId: tenantId } = useAgents();
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://yourapp.com';
   const snippet = `<script
@@ -122,7 +122,7 @@ export default function WidgetInstallPage() {
               {[
                 { attr: 'data-bot-id', req: 'Yes', vals: 'UUID string', desc: 'Your tenant bot ID from Settings' },
                 { attr: 'data-theme', req: 'No', vals: 'dark · minimal · professional · glass', desc: 'Widget visual theme (default: dark)' },
-                { attr: 'data-bot-name', req: 'No', vals: 'Any string', desc: 'Name shown in chat header (default: SmartRealtorAI)' },
+                { attr: 'data-bot-name', req: 'No', vals: 'Any string', desc: 'Name shown in chat header (default: Smart Realtor Agent)' },
                 { attr: 'data-api-base-url', req: 'No', vals: 'URL', desc: 'API origin (default: auto-detected)' },
                 { attr: 'data-welcome-message', req: 'No', vals: 'Any string', desc: 'First message the bot sends' },
               ].map((row) => (

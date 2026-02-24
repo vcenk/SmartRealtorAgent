@@ -1,11 +1,11 @@
 /**
  * DELETE /api/knowledge/delete
- * Deletes a knowledge_source and its chunks for a given tenant.
+ * Deletes a knowledge_source and its chunks for a given agent.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
-import { getTenantIdFromRequest } from '@/lib/auth-tenant';
+import { verifyAgentOwnership, DEMO_AGENT } from '@/lib/auth-tenant';
 
 const bodySchema = z.object({
   tenantId: z.string().uuid(),
@@ -20,10 +20,12 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
   const { tenantId, sourceId } = parsed.data;
 
-  // Ensure the caller's session owns this tenant (or falls back to demo tenant)
-  const callerTenant = await getTenantIdFromRequest(request);
-  if (callerTenant !== tenantId) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  // Verify ownership
+  if (tenantId !== DEMO_AGENT) {
+    const { isOwner } = await verifyAgentOwnership(request, tenantId);
+    if (!isOwner) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
   }
 
   const supabase = createServiceSupabaseClient();

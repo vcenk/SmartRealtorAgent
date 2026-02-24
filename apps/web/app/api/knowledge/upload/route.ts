@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PDFParse } from 'pdf-parse';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
 import { storeChunks } from '@/app/api/knowledge/ingest/route';
+import { verifyAgentOwnership, DEMO_AGENT } from '@/lib/auth-tenant';
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -29,6 +30,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
   if (file.size > MAX_BYTES) {
     return NextResponse.json({ error: 'File exceeds 10 MB limit' }, { status: 413 });
+  }
+
+  // Verify ownership
+  if (tenantId !== DEMO_AGENT) {
+    const { isOwner } = await verifyAgentOwnership(request, tenantId);
+    if (!isOwner) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
   }
 
   const filename = file.name;

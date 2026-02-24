@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTenant } from '@/lib/use-tenant';
+import { useAgents } from '@/lib/agent-context';
 
 type ConversationSummary = {
   conversationId: string;
@@ -105,7 +105,7 @@ function MessageThread({ tenantId, conversationId, onClose }: {
 
 /* ── Page ─────────────────────────────────────────────────── */
 export default function ConversationsPage() {
-  const { tenantId, loading: tenantLoading } = useTenant();
+  const { activeAgentId: tenantId, loading: tenantLoading } = useAgents();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);

@@ -1,4 +1,4 @@
-# SmartRealtorAI — Project Status & Roadmap
+# Smart Realtor Agent — Project Status & Roadmap
 
 > **Branch:** `claude/review-chatbot-redesign-I1qZf`
 > **Last updated:** 2026-02-20

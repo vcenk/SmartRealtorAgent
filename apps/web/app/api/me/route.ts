@@ -1,12 +1,24 @@
 /**
  * GET /api/me
- * Returns the current user's tenantId + email, resolved from their Supabase
- * auth cookie. Safe to call from any client component.
+ * Returns the current user's info including their owned agents.
+ * Safe to call from any client component.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserInfo } from '@/lib/auth-tenant';
+import { getUserInfo, getUserAgents, DEMO_TENANT } from '@/lib/auth-tenant';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const info = await getUserInfo(request);
-  return NextResponse.json(info);
+  const { userId, email } = await getUserInfo(request);
+  const { agents } = await getUserAgents(request);
+
+  // For backwards compatibility, also return tenantId
+  // activeAgentId is the first agent the user owns, or demo if none
+  const activeAgentId = agents.length > 0 ? agents[0].id : DEMO_TENANT;
+
+  return NextResponse.json({
+    userId,
+    email,
+    tenantId: activeAgentId, // backwards compatibility
+    activeAgentId,
+    agents,
+  });
 }

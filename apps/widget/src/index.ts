@@ -1,5 +1,5 @@
 /* ============================================================
-   SmartRealtorAI Widget  –  v2
+   Smart Realtor Agent Widget  –  v2
    Supports 4 selectable themes via data-theme attribute:
      dark | minimal | professional | glass
    ============================================================ */
@@ -416,7 +416,7 @@ const script = document.currentScript as HTMLScriptElement | null;
 const botId = script?.dataset.botId ?? '';
 const rawTheme = (script?.dataset.theme ?? 'dark') as WidgetTheme;
 const theme: WidgetTheme = rawTheme in THEMES ? rawTheme : 'dark';
-const botName = script?.dataset.botName ?? 'SmartRealtorAI';
+const botName = script?.dataset.botName ?? 'Smart Realtor Agent';
 const welcomeMessage =
   script?.dataset.welcomeMessage ??
   'Hi! I\'m your AI real estate assistant. Ask me anything about listings, neighborhoods, or getting started.';
@@ -629,5 +629,5 @@ if (botId) {
   initWidget({ botId, apiBaseUrl: defaultApiBase, theme, botName, welcomeMessage });
 } else {
   // eslint-disable-next-line no-console
-  console.warn('[SmartRealtorWidget] Missing data-bot-id attribute.');
+  console.warn('[Smart Realtor Agent Widget] Missing data-bot-id attribute.');
 }

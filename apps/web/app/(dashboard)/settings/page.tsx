@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTenant } from '@/lib/use-tenant';
+import { useAgents } from '@/lib/agent-context';
 
 type ThemeId = 'dark' | 'minimal' | 'professional' | 'glass';
 
@@ -126,7 +126,7 @@ function ThemePreview({ theme }: { theme: (typeof WIDGET_THEMES)[number] }) {
       >
         <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>🏡</div>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 9, lineHeight: 1.2 }}>SmartRealtorAI</div>
+          <div style={{ fontWeight: 700, fontSize: 9, lineHeight: 1.2 }}>Smart Realtor Agent</div>
           <div style={{ fontSize: 7, opacity: 0.7 }}>● Online</div>
         </div>
       </div>
@@ -167,9 +167,9 @@ function ThemePreview({ theme }: { theme: (typeof WIDGET_THEMES)[number] }) {
 }
 
 export default function SettingsPage() {
-  const { tenantId, loading: tenantLoading } = useTenant();
+  const { activeAgentId: tenantId, loading: tenantLoading } = useAgents();
   const [selectedTheme, setSelectedTheme] = useState<ThemeId>('dark');
-  const [botName, setBotName] = useState('SmartRealtorAI');
+  const [botName, setBotName] = useState('Smart Realtor Agent');
   const [agencyName, setAgencyName] = useState('Demo Realty');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [welcomeMsg, setWelcomeMsg] = useState(

@@ -5,7 +5,7 @@
  * Streams JSON-newline progress events so the UI can show a live progress bar.
  *
  * Body:
- *   tenantId     string (uuid)
+ *   tenantId     string (uuid) — agentId
  *   url          string  — root URL to start crawling from
  *   maxPages?    number  — max pages to crawl (default 20, max 50)
  *   pathPrefix?  string  — only crawl paths starting with this (e.g. "/listings")
@@ -19,7 +19,8 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
 import { crawlSite } from '@/lib/scraper';
-import { embedText, storeChunks } from '../ingest/route';
+import { storeChunks } from '../ingest/route';
+import { verifyAgentOwnership, DEMO_AGENT } from '@/lib/auth-tenant';
 
 const bodySchema = z.object({
   tenantId: z.string().uuid(),
@@ -39,6 +40,15 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
 
   const { tenantId, url, maxPages, pathPrefix } = parsed.data;
+
+  // Verify ownership (demo agent allowed for backwards compatibility)
+  if (tenantId !== DEMO_AGENT) {
+    const { isOwner } = await verifyAgentOwnership(request, tenantId);
+    if (!isOwner) {
+      return Response.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+  }
+
   const supabase = createServiceSupabaseClient();
 
   const encoder = new TextEncoder();
