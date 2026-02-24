@@ -298,8 +298,7 @@ export default function KnowledgeBasePage() {
 
   useEffect(() => {
     if (!tenantLoading) fetchSources();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenantLoading, tenantId]);
+  }, [tenantLoading, tenantId]); // eslint-disable-line
 
   const handleReindex = async (sourceId: string) => {
     setReindexing(sourceId);
