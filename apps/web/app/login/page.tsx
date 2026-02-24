@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { FormEvent, useState, Suspense } from 'react';
 import { createBrowserSupabaseClient } from '@/lib/supabase-client';
+import agentsLogo from '@/content/asset/agents.png';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -60,17 +62,8 @@ function LoginForm() {
       <div className="login-card">
         {/* Logo */}
         <Link href="/" className="login-logo">
-          <svg width="32" height="32" viewBox="0 0 28 28" fill="none">
-            <rect width="28" height="28" rx="8" fill="url(#login-lg)" />
-            <path d="M8 20V12l6-5 6 5v8h-4v-5h-4v5H8Z" fill="white" fillOpacity="0.9" />
-            <defs>
-              <linearGradient id="login-lg" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#7c3aed" />
-                <stop offset="1" stopColor="#3b82f6" />
-              </linearGradient>
-            </defs>
-          </svg>
-          SmartRealtor<span className="gradient-text">AI</span>
+          <Image src={agentsLogo} alt="Smart Realtor Agent" width={36} height={36} style={{ borderRadius: 10 }} />
+          <span>Smart Realtor Agent</span>
         </Link>
 
         <h1 className="login-title">Welcome back</h1>
