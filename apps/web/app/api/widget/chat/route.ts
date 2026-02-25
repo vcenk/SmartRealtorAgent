@@ -17,8 +17,18 @@ import {
 } from '@smartrealtor/skills';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+/* Lazy client init – avoids crash at build time when env vars are absent */
+let _anthropic: Anthropic | undefined;
+function getAnthropic(): Anthropic {
+  if (!_anthropic) _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return _anthropic;
+}
+
+let _openai: OpenAI | undefined;
+function getOpenai(): OpenAI {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
+}
 
 const bodySchema = z.object({
   tenantId: z.string().uuid(),
@@ -29,7 +39,7 @@ const bodySchema = z.object({
 async function generateEmbedding(text: string): Promise<number[] | null> {
   if (!process.env.OPENAI_API_KEY) return null;
   try {
-    const r = await openai.embeddings.create({ model: 'text-embedding-3-small', input: text.slice(0, 8000) });
+    const r = await getOpenai().embeddings.create({ model: 'text-embedding-3-small', input: text.slice(0, 8000) });
     return r.data[0]?.embedding ?? null;
   } catch { return null; }
 }
@@ -128,7 +138,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         if (!process.env.ANTHROPIC_API_KEY) {
           controller.enqueue(encoder.encode(result.assistantMessage));
         } else {
-          const stream = anthropic.messages.stream({
+          const stream = getAnthropic().messages.stream({
             model: 'claude-sonnet-4-6', max_tokens: 512, system: systemPrompt,
             messages: [{ role: 'user', content: userMessage }],
           });

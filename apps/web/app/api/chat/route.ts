@@ -13,9 +13,18 @@ import {
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
 import { requireTenantOwnership } from '@/lib/auth-helpers';
 
-/* ── Clients ──────────────────────────────────────────────── */
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+/* ── Clients (lazy – avoids crash at build time when env vars are absent) ── */
+let _anthropic: Anthropic | undefined;
+function getAnthropic(): Anthropic {
+  if (!_anthropic) _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return _anthropic;
+}
+
+let _openai: OpenAI | undefined;
+function getOpenai(): OpenAI {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
+}
 
 /* ── Request schema ───────────────────────────────────────── */
 const requestSchema = z.object({
@@ -28,7 +37,7 @@ const requestSchema = z.object({
 async function generateEmbedding(text: string): Promise<number[] | null> {
   if (!process.env.OPENAI_API_KEY) return null;
   try {
-    const resp = await openai.embeddings.create({
+    const resp = await getOpenai().embeddings.create({
       model: 'text-embedding-3-small',
       input: text.slice(0, 8000),
     });
@@ -190,7 +199,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           return;
         }
 
-        const stream = anthropic.messages.stream({
+        const stream = getAnthropic().messages.stream({
           model: 'claude-sonnet-4-6',
           max_tokens: 512,
           system: systemPrompt,

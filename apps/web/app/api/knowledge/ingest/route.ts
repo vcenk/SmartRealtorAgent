@@ -13,7 +13,12 @@ import { createServiceSupabaseClient } from '@/lib/supabase-server';
 import { scrapePage } from '@/lib/scraper';
 import { verifyAgentOwnership, DEMO_AGENT } from '@/lib/auth-tenant';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+/* Lazy client init – avoids crash at build time when env vars are absent */
+let _openai: OpenAI | undefined;
+function getOpenai(): OpenAI {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
+}
 
 const requestSchema = z
   .object({
@@ -28,7 +33,7 @@ const requestSchema = z
 export async function embedText(text: string): Promise<number[] | null> {
   if (!process.env.OPENAI_API_KEY) return null;
   try {
-    const resp = await openai.embeddings.create({
+    const resp = await getOpenai().embeddings.create({
       model: 'text-embedding-3-small',
       input: text.slice(0, 8000),
     });
