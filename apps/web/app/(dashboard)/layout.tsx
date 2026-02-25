@@ -15,6 +15,7 @@ const navItems = [
   { href: '/conversations', label: 'Conversations', icon: '💬' },
   { href: '/knowledge-base', label: 'Knowledge Base', icon: '📚' },
   { href: '/widget-install', label: 'Widget Install', icon: '🔌' },
+  { href: '/test-chat', label: 'Test Chatbot', icon: '🧪' },
   { href: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 

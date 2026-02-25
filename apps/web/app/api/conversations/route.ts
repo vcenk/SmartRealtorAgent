@@ -7,6 +7,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
+import { requireTenantOwnership } from '@/lib/auth-helpers';
 
 type MessageRow = {
   id: string;
@@ -24,6 +25,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!tenantId) {
     return NextResponse.json({ error: 'tenantId is required' }, { status: 422 });
   }
+
+  // Verify tenant ownership (allow demo agent for onboarding)
+  const auth = await requireTenantOwnership(request, tenantId, { allowDemo: true });
+  if (!auth.authorized) return auth.response;
 
   const supabase = createServiceSupabaseClient();
 

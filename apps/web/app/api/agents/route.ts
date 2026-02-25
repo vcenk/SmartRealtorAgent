@@ -16,7 +16,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const { userId } = await getUserInfo(request);
 
   if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Return empty list instead of 401 so prefetches / unauthenticated
+    // dashboard loads don't produce console errors.
+    return NextResponse.json([]);
   }
 
   const supabase = createServiceSupabaseClient();
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       widget_theme: 'dark',
       brand_color: '#7c3aed',
     })
-    .select('id, name, website_url, bot_name, widget_theme, brand_color, created_at')
+    .select('id, name, website_url, bot_name, widget_theme, brand_color, created_at, updated_at')
     .single();
 
   if (error) {

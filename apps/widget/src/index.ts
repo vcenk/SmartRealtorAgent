@@ -168,6 +168,8 @@ const THEMES: Record<WidgetTheme, ThemeVars> = {
     launcherBg: 'rgba(124,58,237,0.7)',
     launcherColor: '#ffffff',
     launcherShadow: '0 8px 32px rgba(124,58,237,0.4)',
+    timestampColor: 'rgba(255,255,255,0.4)',
+    typingColor: '#a855f7',
     backdropFilter: 'blur(20px)',
     borderRadius: '22px',
     font: "'Inter', 'Segoe UI', sans-serif",

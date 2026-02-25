@@ -13,7 +13,7 @@ export default function AgentsPage() {
     if (!confirm('Delete this agent and all its data? This cannot be undone.')) return;
     setDeletingId(agentId);
     try {
-      const res = await fetch(`/api/agents?id=${agentId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/agents/${agentId}`, { method: 'DELETE' });
       if (res.ok) {
         window.location.reload();
       }

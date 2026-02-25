@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
@@ -11,6 +11,7 @@ import {
   type DbAdapter,
 } from '@smartrealtor/skills';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
+import { requireTenantOwnership } from '@/lib/auth-helpers';
 
 /* ── Clients ──────────────────────────────────────────────── */
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -152,8 +153,22 @@ ${ctxBlock}`;
 
 /* ── POST handler ─────────────────────────────────────────── */
 export async function POST(request: NextRequest): Promise<Response> {
-  const json = await request.json();
-  const payload = requestSchema.parse(json);
+  let json: unknown;
+  try {
+    json = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  const parseResult = requestSchema.safeParse(json);
+  if (!parseResult.success) {
+    return NextResponse.json({ error: parseResult.error.flatten() }, { status: 422 });
+  }
+  const payload = parseResult.data;
+
+  // Verify tenant ownership (allow demo agent for onboarding)
+  const auth = await requireTenantOwnership(request, payload.tenantId, { allowDemo: true });
+  if (!auth.authorized) return auth.response;
 
   const registry = createRegistry(payload.tenantId, payload.conversationId);
   const orchestrator = new Orchestrator(registry);

@@ -16,6 +16,7 @@ function LoginForm() {
 
   const redirect = searchParams.get('redirect') ?? '/leads';
   const errorParam = searchParams.get('error');
+  const errorMessage = searchParams.get('message');
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -40,16 +41,28 @@ function LoginForm() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     setStatus(null);
-    const supabase = createBrowserSupabaseClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
-      },
-    });
-    if (error) {
+    try {
+      const supabase = createBrowserSupabaseClient();
+      const redirectUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`;
+      console.log('[Google Sign In] Starting OAuth flow, redirectTo:', redirectUrl);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+        },
+      });
+
+      console.log('[Google Sign In] Response:', { data, error });
+
+      if (error) {
+        setGoogleLoading(false);
+        setStatus({ type: 'error', msg: error.message });
+      }
+    } catch (err) {
+      console.error('[Google Sign In] Exception:', err);
       setGoogleLoading(false);
-      setStatus({ type: 'error', msg: error.message });
+      setStatus({ type: 'error', msg: 'An unexpected error occurred' });
     }
   };
 
@@ -71,7 +84,7 @@ function LoginForm() {
 
         {errorParam === 'auth_callback_error' && (
           <div className="login-status login-status-error">
-            ✕ Authentication failed. Please try again.
+            ✕ {errorMessage ? decodeURIComponent(errorMessage) : 'Authentication failed. Please try again.'}
           </div>
         )}
 

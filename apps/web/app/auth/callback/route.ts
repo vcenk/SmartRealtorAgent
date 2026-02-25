@@ -8,6 +8,16 @@ export async function GET(request: Request) {
   const next = requestUrl.searchParams.get('next') ?? '/leads';
   const origin = requestUrl.origin;
 
+  // Check for OAuth errors from provider
+  const error = requestUrl.searchParams.get('error');
+  const errorDescription = requestUrl.searchParams.get('error_description');
+
+  if (error) {
+    console.error('[Auth Callback] OAuth error:', error, errorDescription);
+    const errorMsg = encodeURIComponent(errorDescription || error);
+    return NextResponse.redirect(`${origin}/login?error=auth_callback_error&message=${errorMsg}`);
+  }
+
   if (code) {
     const cookieStore = await cookies();
 
@@ -32,13 +42,17 @@ export async function GET(request: Request) {
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error) {
+    if (!sessionError) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+
+    console.error('[Auth Callback] Session exchange error:', sessionError.message);
+    return NextResponse.redirect(`${origin}/login?error=auth_callback_error&message=${encodeURIComponent(sessionError.message)}`);
   }
 
-  // Return to login with error if code exchange failed
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_error`);
+  // No code and no error - likely a direct visit or misconfiguration
+  console.error('[Auth Callback] No code parameter received. Check Supabase Site URL configuration.');
+  return NextResponse.redirect(`${origin}/login?error=auth_callback_error&message=${encodeURIComponent('No authorization code received. Please check Supabase Site URL configuration.')}`);
 }
