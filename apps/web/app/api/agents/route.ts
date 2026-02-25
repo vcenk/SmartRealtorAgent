@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
 import { getUserInfo } from '@/lib/auth-tenant';
+import { getUserSubscription } from '@/lib/subscription';
+import { getPlanLimits } from '@/lib/plans';
 
 const createSchema = z.object({
   name: z.string().min(1).max(200),
@@ -56,6 +58,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const { name, websiteUrl } = parsed.data;
   const supabase = createServiceSupabaseClient();
+
+  // Enforce plan agent limit
+  const sub = await getUserSubscription(userId);
+  const limits = getPlanLimits(sub.plan);
+  const { count } = await supabase
+    .from('tenants')
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_id', userId);
+  if ((count ?? 0) >= limits.maxAgents) {
+    return NextResponse.json(
+      { error: `Your ${sub.plan} plan allows up to ${limits.maxAgents} agent(s). Please upgrade to create more.` },
+      { status: 403 },
+    );
+  }
 
   // Create the new agent
   const { data, error } = await supabase

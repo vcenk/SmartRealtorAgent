@@ -63,20 +63,30 @@ const pricing = [
     plan: 'Starter',
     price: '$0',
     period: '/month',
-    description: 'For solo agents validating AI chat on their site.',
+    description: 'Build and test your AI agent in the dashboard — upgrade to go live.',
     cta: 'Start free',
     href: '/signup',
-    highlights: ['1 website widget', 'Basic lead capture', 'Knowledge base upload', 'Email support'],
+    highlights: [
+      '1 agent — dashboard testing only',
+      'Knowledge base upload',
+      'Test chat in dashboard',
+      'Email support',
+    ],
   },
   {
     plan: 'Growth',
     price: '$49',
     period: '/month',
-    description: 'For active teams that need stronger automation.',
+    description: 'Publish widgets on your websites with full lead capture.',
     cta: 'Start trial',
     href: '/signup',
     featured: true,
-    highlights: ['Up to 10 widgets', 'Advanced lead qualification', 'Citation enforcement', 'Priority support'],
+    highlights: [
+      'Up to 10 published widgets',
+      'Advanced lead qualification',
+      'Citation enforcement',
+      'Priority support',
+    ],
   },
   {
     plan: 'Enterprise',
@@ -85,7 +95,12 @@ const pricing = [
     description: 'For brokerages needing custom workflows and controls.',
     cta: 'Talk to sales',
     href: '/contact',
-    highlights: ['Unlimited widgets', 'Custom integrations', 'Compliance controls', 'Dedicated success manager'],
+    highlights: [
+      'Unlimited published widgets',
+      'Custom integrations',
+      'Compliance controls',
+      'Dedicated success manager',
+    ],
   },
 ];
 

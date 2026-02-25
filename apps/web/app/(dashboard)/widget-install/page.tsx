@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAgents } from '@/lib/agent-context';
 
@@ -31,9 +31,21 @@ const steps = [
   },
 ];
 
+type SubInfo = { plan: string; limits: { canPublish: boolean } };
+
 export default function WidgetInstallPage() {
   const [theme, setTheme] = useState<ThemeId>('dark');
   const { activeAgentId: tenantId } = useAgents();
+  const [sub, setSub] = useState<SubInfo | null>(null);
+
+  useEffect(() => {
+    fetch('/api/subscription')
+      .then((r) => r.json())
+      .then((d) => setSub(d))
+      .catch(() => {});
+  }, []);
+
+  const canPublish = sub?.limits.canPublish ?? false;
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://yourapp.com';
   const snippet = `<script
@@ -41,6 +53,20 @@ export default function WidgetInstallPage() {
   data-bot-id="${tenantId}"
   data-theme="${theme}"
 ></script>`;
+
+  const handleUpgrade = async () => {
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'growth' }),
+      });
+      const { url } = await res.json();
+      if (url) window.location.href = url;
+    } catch {
+      // Stripe not configured yet — fall through
+    }
+  };
 
   return (
     <div className="dash-page">
@@ -52,6 +78,41 @@ export default function WidgetInstallPage() {
         </div>
         <div className="badge" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>🔌 One Script Tag</div>
       </div>
+
+      {/* Upgrade banner for starter plan */}
+      {sub && !canPublish && (
+        <div
+          style={{
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(59,130,246,0.12))',
+            border: '1px solid rgba(124,58,237,0.3)',
+            borderRadius: '16px',
+            padding: '1.5rem 2rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.25rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.35rem' }}>
+              Upgrade to publish your widget
+            </div>
+            <p style={{ fontSize: '0.9rem', color: 'var(--muted)', margin: 0, lineHeight: 1.5 }}>
+              Your Starter plan lets you create agents and test them in the{' '}
+              <Link href="/test-chat" style={{ color: 'var(--purple-light)' }}>Test Chat</Link> page.
+              To embed the widget on your website, upgrade to the Growth plan.
+            </p>
+          </div>
+          <button
+            className="btn btn-primary"
+            style={{ fontSize: '0.9rem', padding: '0.7rem 1.8rem', whiteSpace: 'nowrap' }}
+            onClick={handleUpgrade}
+          >
+            Upgrade to Growth — $49/mo
+          </button>
+        </div>
+      )}
 
       {/* Steps */}
       <div className="widget-steps">
@@ -91,7 +152,7 @@ export default function WidgetInstallPage() {
       </div>
 
       {/* Code snippet */}
-      <div className="dash-code-block-wrap">
+      <div className="dash-code-block-wrap" style={{ opacity: canPublish ? 1 : 0.5, pointerEvents: canPublish ? 'auto' : 'none' }}>
         <div className="dash-code-header">
           <span style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>
             HTML — paste before &lt;/body&gt; · theme: <strong style={{ color: 'var(--purple-light)' }}>{theme}</strong>

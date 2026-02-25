@@ -16,6 +16,7 @@ import {
   type DbAdapter,
 } from '@smartrealtor/skills';
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
+import { canAgentPublish } from '@/lib/subscription';
 
 /* Lazy client init – avoids crash at build time when env vars are absent */
 let _anthropic: Anthropic | undefined;
@@ -109,6 +110,15 @@ export async function POST(request: NextRequest): Promise<Response> {
   // Verify tenant exists
   const { data: tenant } = await supabase.from('tenants').select('id, bot_name, welcome_message').eq('id', tenantId).single();
   if (!tenant) return Response.json({ error: 'Tenant not found' }, { status: 404 });
+
+  // Check subscription — starter plan cannot publish widgets
+  const allowed = await canAgentPublish(tenantId);
+  if (!allowed) {
+    return Response.json(
+      { error: 'Widget publishing requires a Growth or Enterprise plan. Please upgrade to continue.' },
+      { status: 403 },
+    );
+  }
 
   // Run orchestrator
   const db = buildDbAdapter();
